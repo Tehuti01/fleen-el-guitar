@@ -33,7 +33,6 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     , outputMeter (new MeterDisplay())
     , visualizer (new OpenGLVisualizer())
     , presetSelector (new PresetSelector (p))
-    , testKeyboard (new TestKeyboard (p))
     , bypassButton ("BYPASS")
 {
     setLookAndFeel (customLookAndFeel);
@@ -69,13 +68,10 @@ PluginEditor::~PluginEditor()
     delete outputMeter;
     delete visualizer;
     delete presetSelector;
-    delete testKeyboard;
 }
 
 void PluginEditor::paint (juce::Graphics& g)
 {
-    g.setRenderQuality (juce::Graphics::highRenderingQuality);
-    
     // Premium dark gradient background
     juce::ColourGradient gradient (
         juce::Colour::fromRGB (35, 35, 40),
@@ -90,7 +86,7 @@ void PluginEditor::paint (juce::Graphics& g)
 
 void PluginEditor::resized()
 {
-    const auto bounds = getLocalBounds();
+    auto bounds = getLocalBounds();
     const int spacing = 16;
     
     // Top bar: Preset selector
@@ -107,9 +103,8 @@ void PluginEditor::resized()
     // Right: Visualizer
     sidebar.setBounds (mainArea.reduced (spacing));
     
-    // Bottom: Test keyboard
+    // Bottom area (reserved for future test keyboard)
     bottomPanel.setBounds (bounds.reduced (spacing));
-    testKeyboard->setBounds (bottomPanel.getLocalBounds());
     
     // Layout controls in grid
     auto controls = mainPanel.getLocalBounds();
@@ -164,7 +159,6 @@ void PluginEditor::setupComponents()
     addAndMakeVisible (sidebar);
     addAndMakeVisible (bottomPanel);
     addAndMakeVisible (presetSelector);
-    addAndMakeVisible (testKeyboard);
     addAndMakeVisible (visualizer);
     addAndMakeVisible (inputMeter);
     addAndMakeVisible (outputMeter);

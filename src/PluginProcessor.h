@@ -3,13 +3,11 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_dsp/juce_dsp.h>
 #include <juce_gui_extra/juce_gui_extra.h>
+#include "state/StateManager.h"
+#include "state/PresetManager.h"
 
 namespace fleen
 {
-
-// Forward declarations
-class StateManager;
-class PresetManager;
 
 /**
  * @brief Fleen El-Guitar Audio Processor
@@ -121,21 +119,12 @@ private:
     std::atomic<float> chorusParam { 0.2f };
     std::atomic<bool> bypassParam { false };
     
-    // DSP Chain
+    // DSP Chain - simplified for JUCE 8
     juce::dsp::ProcessorChain<
         juce::dsp::Gain<float>,           // Input gain
-        juce::dsp::ProcessorChain<
-            juce::dsp::IIR::Filter<float>, // Bass
-            juce::dsp::IIR::Filter<float>, // Mid
-            juce::dsp::IIR::Filter<float>, // Treble
-            juce::dsp::IIR::Filter<float>  // Presence
-        >,
         juce::dsp::WaveShaper<float>,     // Distortion
         juce::dsp::Compressor<float>,     // Compression
-        juce::dsp::Reverb,                // Reverb
-        juce::dsp::DelayLine<float>,      // Delay
-        juce::dsp::Chorus<float>,         // Chorus
-        juce::dsp::DryWetMix<float>       // Mix
+        juce::dsp::Reverb                 // Reverb
     > dspChain;
     
     bool isPrepared { false };

@@ -100,19 +100,11 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         
         // Update DSP parameters
         auto& inputGain = dspChain.get<0>();
-        inputGain.setGain (gainParam.load());
+        inputGain.setGainDecibels (juce::Decibels::gainToDecibels (gainParam.load()));
         
-        auto& eq = dspChain.get<1>();
-        auto& bass = eq.get<0>();
-        auto& mid = eq.get<1>();
-        auto& treble = eq.get<2>();
-        auto& presence = eq.get<3>();
-        
-        auto& distortion = dspChain.get<2>();
-        auto& compressor = dspChain.get<3>();
-        auto& reverb = dspChain.get<4>();
-        auto& delay = dspChain.get<5>();
-        auto& chorus = dspChain.get<6>();
+        auto& distortion = dspChain.get<1>();
+        auto& compressor = dspChain.get<2>();
+        auto& reverb = dspChain.get<3>();
         
         dspChain.process (context);
     }
@@ -144,8 +136,12 @@ void PluginProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     auto state = parameters.copyState();
     std::unique_ptr<juce::XmlElement> xml (state.createXml());
-    destData.reset();
-    destData.appendAll (xml->createDocument().toRawXML());
+    if (xml != nullptr)
+    {
+        auto xmlString = xml->toString();
+        destData.setSize (xmlString.getNumBytesAsUTF8());
+        destData.copyFrom (xmlString.toUTF8(), 0, destData.getSize());
+    }
 }
 
 void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)

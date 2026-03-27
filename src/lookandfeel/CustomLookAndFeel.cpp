@@ -63,7 +63,7 @@ void CustomLookAndFeel::drawRotarySlider (juce::Graphics& g,
         );
         
         g.setColour (juce::Colour::fromRGB (40, 40, 45));
-        g.strokePath (backgroundTrack, juce::PathStrokeType (4.0f, juce::PathStrokeType::rounded));
+        g.strokePath (backgroundTrack, juce::PathStrokeType (4.0f));
     }
     
     // Draw active arc (value indicator)
@@ -77,7 +77,7 @@ void CustomLookAndFeel::drawRotarySlider (juce::Graphics& g,
         );
         
         g.setColour (juce::Colour::fromRGB (0, 150, 200));
-        g.strokePath (activeArc, juce::PathStrokeType (4.0f, juce::PathStrokeType::rounded));
+        g.strokePath (activeArc, juce::PathStrokeType (4.0f));
     }
     
     // Draw metallic knob body
@@ -204,7 +204,7 @@ void CustomLookAndFeel::drawComboBox (juce::Graphics& g, int width, int height,
     arrow.lineTo (arrowX + arrowW * 0.5f, arrowY + arrowH * 0.7f);
     
     g.setColour (comboBox.findColour (juce::ComboBox::textColourId));
-    g.strokePath (arrow, juce::PathStrokeType (2.0f, juce::PathStrokeType::rounded));
+    g.strokePath (arrow, juce::PathStrokeType (2.0f));
 }
 
 void CustomLookAndFeel::drawPopupMenuBackground (juce::Graphics& g, juce::PopupMenu& menu)

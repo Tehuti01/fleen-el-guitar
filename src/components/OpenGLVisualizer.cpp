@@ -30,9 +30,6 @@ OpenGLVisualizer::~OpenGLVisualizer()
 
 void OpenGLVisualizer::paint (juce::Graphics& g)
 {
-    g.setRenderQuality (juce::Graphics::highRenderingQuality);
-    g.setRenderQuality (juce::Graphics::antiAliasedRendering);
-    
     const auto bounds = getLocalBounds().toFloat();
     
     // Draw dark background with subtle gradient
@@ -87,8 +84,8 @@ void OpenGLVisualizer::updateDisplay()
     if (processor != nullptr)
     {
         // Generate animated waveform based on input/output levels
-        const float inputLevel = processor->inputLevel.load();
-        const float outputLevel = processor->outputLevel.load();
+        const float inputLevel = processor->getInputLevel();
+        const float outputLevel = processor->getOutputLevel();
         
         // Create smooth animated waveform
         for (size_t i = 0; i < waveformBuffer.size(); ++i)
@@ -147,8 +144,8 @@ void OpenGLVisualizer::setMode (Mode newMode)
 void OpenGLVisualizer::timerCallback()
 {
     // Continuous animation even without audio
-    if (processor == nullptr || (processor->inputLevel.load() < 0.01f && 
-                                  processor->outputLevel.load() < 0.01f))
+    if (processor == nullptr || (processor->getInputLevel() < 0.01f && 
+                                  processor->getOutputLevel() < 0.01f))
     {
         phase += 0.02f;
         if (phase > juce::MathConstants<float>::twoPi)
@@ -184,8 +181,7 @@ void OpenGLVisualizer::drawWaveform (juce::Graphics& g, const juce::Rectangle<fl
     // Draw glow effect
     if (glowIntensity > 0.01f)
     {
-        juce::PathStrokeType glowStroke (3.0f + glowIntensity * 4.0f, 
-                                         juce::PathStrokeType::rounded);
+        juce::PathStrokeType glowStroke (3.0f + glowIntensity * 4.0f);
         g.setColour (primaryColour.withMultipliedAlpha (glowIntensity * 0.3f));
         g.strokePath (waveformPath, glowStroke);
     }
@@ -200,23 +196,23 @@ void OpenGLVisualizer::drawWaveform (juce::Graphics& g, const juce::Rectangle<fl
     );
     
     g.setGradientFill (gradient);
-    g.strokePath (waveformPath, juce::PathStrokeType (2.0f, juce::PathStrokeType::rounded));
-    
+    g.strokePath (waveformPath, juce::PathStrokeType (2.0f));
+
     // Draw mirrored waveform (for stereo effect)
     juce::Path mirroredPath;
     for (size_t i = 0; i < waveformBuffer.size(); ++i)
     {
         const float x = bounds.getX() + (static_cast<float> (i) / waveformBuffer.size()) * bounds.getWidth();
         const float y = centerY - waveformBuffer[i] * amplitude;
-        
+
         if (i == 0)
             mirroredPath.startNewSubPath (x, y);
         else
             mirroredPath.lineTo (x, y);
     }
-    
+
     g.setColour (primaryColour.withMultipliedAlpha (0.5f));
-    g.strokePath (mirroredPath, juce::PathStrokeType (1.0f, juce::PathStrokeType::rounded));
+    g.strokePath (mirroredPath, juce::PathStrokeType (1.0f));
 }
 
 void OpenGLVisualizer::drawSpectrum (juce::Graphics& g, const juce::Rectangle<float>& bounds)
@@ -284,7 +280,7 @@ void OpenGLVisualizer::drawLabel (juce::Graphics& g, const juce::Rectangle<float
     }();
     
     g.setColour (juce::Colours::white.withMultipliedAlpha (0.5f));
-    g.setFont (juce::Font ("Inter", 10.0f, juce::Font::plain));
+    g.setFont (10.0f);
     g.drawText (modeText, bounds.reduced (8), juce::Justification::topRight);
 }
 

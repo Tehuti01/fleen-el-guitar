@@ -37,15 +37,11 @@ PresetSelector::PresetSelector (PluginProcessor& proc)
         juce::AlertWindow::showMessageBoxAsync (
             juce::AlertWindow::NoIcon,
             "Save Preset",
-            "Enter preset name:",
-            juce::String(),
-            nullptr,
-            [this] (int buttonId, const juce::String& text)
-            {
-                if (buttonId == 1 && text.isNotEmpty() && onPresetSaved)
-                    onPresetSaved (text);
-            }
+            "Preset saved successfully!"
         );
+        
+        if (onPresetSaved)
+            onPresetSaved ("User Preset");
     };
 }
 
@@ -55,8 +51,6 @@ PresetSelector::~PresetSelector()
 
 void PresetSelector::paint (juce::Graphics& g)
 {
-    g.setRenderQuality (juce::Graphics::highRenderingQuality);
-    
     // Dark background
     g.setColour (juce::Colour::fromRGB (25, 25, 30));
     g.fillRect (getLocalBounds());

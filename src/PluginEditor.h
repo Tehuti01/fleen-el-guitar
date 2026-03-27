@@ -12,7 +12,6 @@ class LedIndicator;
 class MeterDisplay;
 class OpenGLVisualizer;
 class PresetSelector;
-class TestKeyboard;
 class CustomLookAndFeel;
 
 /**
@@ -24,7 +23,8 @@ class CustomLookAndFeel;
  * - Real-time visualizations
  * - Test keyboard
  */
-class PluginEditor : public juce::AudioProcessorEditor
+class PluginEditor : public juce::AudioProcessorEditor,
+                     private juce::Timer
 {
 public:
     explicit PluginEditor (PluginProcessor&);

@@ -240,11 +240,12 @@ void PresetManager::loadPreset (const juce::String& name)
 bool PresetManager::savePreset (const juce::String& name, const juce::String& category)
 {
     juce::ValueTree state ("Preset");
-    auto& parameters = processor.getParameters();
+    auto& apvts = processor.getParameters();
     
-    for (auto* param : parameters.getParameters())
+    for (int i = 0; i < apvts.state.getNumProperties(); ++i)
     {
-        state.setProperty (param->paramID, param->getValue(), nullptr);
+        auto propName = apvts.state.getPropertyName (i).toString();
+        state.setProperty (propName, apvts.state.getProperty (propName), nullptr);
     }
     
     Preset newPreset (name, category, state, false);

@@ -115,8 +115,6 @@ target_sources(FleenElGuitar
         src/components/OpenGLVisualizer.cpp
         src/components/PresetSelector.h
         src/components/PresetSelector.cpp
-        src/components/TestKeyboard.h
-        src/components/TestKeyboard.cpp
         
         # State Management
         src/state/StateManager.h

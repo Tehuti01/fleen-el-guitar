@@ -283,7 +283,7 @@ void SkeuomorphicKnob::drawHighlightRing (juce::Graphics& g, const juce::Rectang
     );
     
     g.setColour (ringColour.withMultipliedAlpha (highlightAlpha * 0.5f));
-    g.strokePath (ring, juce::PathStrokeType (2.0f, juce::PathStrokeType::rounded));
+    g.strokePath (ring, juce::PathStrokeType (2.0f));
 }
 
 } // namespace fleen

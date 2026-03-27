@@ -10,7 +10,8 @@
       "Bash(git push)",
       "Bash(cmake *)",
       "Bash(brew *)",
-      "Bash(rm *)"
+      "Bash(rm *)",
+      "Bash(sed *)"
     ]
   }
 }
