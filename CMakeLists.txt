@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
 # ============================================================================
-# Fleen El-Guitar VST3 Plugin
-# Professional Audio Plugin with Premium Front-End and Robust Back-End
+# Fleen El-Guitar VST3 Plugin - Professional Guitar Processing
 # ============================================================================
 
 set(CMAKE_CXX_STANDARD 20)
@@ -37,7 +36,7 @@ endif()
 include(${CPM_DOWNLOAD_LOCATION})
 
 # ============================================================================
-# JUCE Framework (v8)
+# JUCE Framework
 # ============================================================================
 
 CPMAddPackage(
@@ -53,41 +52,6 @@ CPMAddPackage(
         "JUCE_COPY_PLUGIN_AFTER_BUILD=ON"
         "JUCE_ENABLE_LTO=ON"
 )
-
-# ============================================================================
-# Additional Modules
-# ============================================================================
-
-# Note: These modules are optional and can be enabled if needed
-# For a simpler build, we're using only core JUCE functionality
-
-# Melatonin Blur - High-performance shadows for neumorphism
-# CPMAddPackage(
-#     NAME melatonin_blur
-#     GITHUB_REPOSITORY sudara/melatonin_blur
-#     GIT_TAG main
-# )
-
-# Melatonin Inspector - Component hierarchy auditing
-# CPMAddPackage(
-#     NAME melatonin_inspector
-#     GITHUB_REPOSITORY sudara/melatonin_inspector
-#     GIT_TAG main
-# )
-
-# JIVE - Declarative UI layouts
-# CPMAddPackage(
-#     NAME JIVE
-#     GITHUB_REPOSITORY ImJimmi/JIVE
-#     GIT_TAG main
-# )
-
-# Foleys GUI Magic - Runtime GUI designer
-# CPMAddPackage(
-#     NAME foleys_gui_magic
-#     GITHUB_REPOSITORY foleys/foleys_gui_magic
-#     GIT_TAG main
-# )
 
 # ============================================================================
 # Plugin Configuration
@@ -107,7 +71,7 @@ juce_add_plugin(FleenElGuitar
     COMPANY_NAME "${PLUGIN_COMPANY}"
     BUNDLE_ID com.fleenaudio.fleenelguitar
     IS_SYNTH FALSE
-    NEEDS_MIDI_INPUT FALSE
+    NEEDS_MIDI_INPUT TRUE
     NEEDS_MIDI_OUTPUT FALSE
     IS_MIDI_EFFECT FALSE
     EDITOR_WANTS_KEYBOARD_FOCUS TRUE
@@ -129,8 +93,6 @@ target_sources(FleenElGuitar
         # Core Plugin
         src/PluginProcessor.h
         src/PluginProcessor.cpp
-        
-        # GUI Components
         src/PluginEditor.h
         src/PluginEditor.cpp
         
@@ -151,6 +113,10 @@ target_sources(FleenElGuitar
         src/components/MeterDisplay.cpp
         src/components/OpenGLVisualizer.h
         src/components/OpenGLVisualizer.cpp
+        src/components/PresetSelector.h
+        src/components/PresetSelector.cpp
+        src/components/TestKeyboard.h
+        src/components/TestKeyboard.cpp
         
         # State Management
         src/state/StateManager.h
@@ -215,12 +181,8 @@ target_link_libraries(FleenElGuitar
 # Binary Resources
 # ============================================================================
 
-# Create placeholder assets directory if it doesn't exist
-file(MAKE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts")
-file(MAKE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/images")
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/presets")
 
-# Create minimal placeholder files for build
 if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/presets/default.json")
     file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/assets/presets/default.json" "{}")
 endif()
@@ -230,27 +192,7 @@ juce_add_binary_data(BinaryData
         assets/presets/default.json
 )
 
-target_compile_definitions(BinaryData
-    PUBLIC
-        JUCE_USE_CUSTOM_PLUGIN_STANDALONE_NAME=1
-)
-
-target_link_libraries(FleenElGuitar
-    PRIVATE
-        BinaryData
-)
-
-# ============================================================================
-# Installation
-# ============================================================================
-
-include(GNUInstallDirs)
-
-install(TARGETS FleenElGuitar
-    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}/VST3"
-    BUNDLE DESTINATION "${CMAKE_INSTALL_LIBDIR}/VST3"
-    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
-)
+target_link_libraries(FleenElGuitar PRIVATE BinaryData)
 
 # ============================================================================
 # Print Configuration

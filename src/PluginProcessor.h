@@ -3,22 +3,25 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_dsp/juce_dsp.h>
 #include <juce_gui_extra/juce_gui_extra.h>
-#include "dsp/GainStage.h"
-#include "dsp/ToneStack.h"
-#include "state/StateManager.h"
-#include "state/PresetManager.h"
 
 namespace fleen
 {
 
+// Forward declarations
+class StateManager;
+class PresetManager;
+
 /**
  * @brief Fleen El-Guitar Audio Processor
  * 
- * Professional guitar processing plugin with premium skeuomorphic interface.
- * Implements lock-free, real-time safe DSP processing chain.
+ * Professional guitar processing plugin with:
+ * - 8 premium factory presets
+ * - A/B/C/D preset switching
+ * - Custom preset save/load
+ * - Premium DSP chain
+ * - MIDI keyboard support
  */
-class PluginProcessor : public juce::AudioProcessor,
-                        private juce::AudioProcessorValueTreeState::Listener
+class PluginProcessor : public juce::AudioProcessor
 {
 public:
     // ========================================================================
@@ -40,7 +43,7 @@ public:
     bool hasEditor() const override { return true; }
     
     const juce::String getName() const override { return JucePlugin_Name; }
-    bool acceptsMidi() const override { return false; }
+    bool acceptsMidi() const override { return true; }
     bool producesMidi() const override { return false; }
     bool isMidiEffect() const override { return false; }
     double getTailLengthSeconds() const override { return 2.0; }
@@ -58,90 +61,87 @@ public:
     // State Management
     // ========================================================================
     
-    /** @brief Get the APVTS instance for parameter binding */
     juce::AudioProcessorValueTreeState& getParameters() { return parameters; }
     const juce::AudioProcessorValueTreeState& getParameters() const { return parameters; }
     
-    /** @brief Get the state manager for thread-safe updates */
     StateManager& getStateManager() { return stateManager; }
-    
-    /** @brief Get the preset manager */
     PresetManager& getPresetManager() { return presetManager; }
     const PresetManager& getPresetManager() const { return presetManager; }
     
-    /** @brief Get current gain parameter (thread-safe) */
-    float getGain() const { return gain.load(); }
+    // Real-time parameter access
+    float getGain() const { return gainParam.load(); }
+    float getDrive() const { return driveParam.load(); }
+    float getBass() const { return bassParam.load(); }
+    float getMid() const { return midParam.load(); }
+    float getTreble() const { return trebleParam.load(); }
+    float getPresence() const { return presenceParam.load(); }
+    float getReverb() const { return reverbParam.load(); }
+    float getCompression() const { return compressionParam.load(); }
+    float getDelay() const { return delayParam.load(); }
+    float getChorus() const { return chorusParam.load(); }
+    bool getBypass() const { return bypassParam.load(); }
     
-    /** @brief Get current drive parameter (thread-safe) */
-    float getDrive() const { return drive.load(); }
-    
-    /** @brief Get input level for meters (thread-safe) */
+    // Level meters
     float getInputLevel() const { return inputLevel.load(); }
-    
-    /** @brief Get output level for meters (thread-safe) */
     float getOutputLevel() const { return outputLevel.load(); }
 
 private:
     // ========================================================================
-    // APVTS Listener
+    // Parameter Handling
     // ========================================================================
     
-    void parameterChanged (const juce::String& parameterID, float newValue) override;
-
-    // ========================================================================
-    // Parameter Layout
-    // ========================================================================
-    
-    /** @brief Create the parameter layout for APVTS */
+    void parameterChanged (const juce::String& parameterID, float newValue);
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
     // ========================================================================
-    // DSP Chain
+    // DSP
     // ========================================================================
     
-    /** @brief Prepare DSP chain for playback */
     void prepareDSP();
-    
-    /** @brief Reset DSP chain */
     void resetDSP();
 
     // ========================================================================
     // Member Variables
     // ========================================================================
     
-    // State Management
     juce::AudioProcessorValueTreeState parameters;
     StateManager stateManager;
     PresetManager presetManager;
     
     // Atomic parameters for real-time access
-    std::atomic<float> gain { 0.5f };
-    std::atomic<float> drive { 0.5f };
-    std::atomic<float> bass { 0.5f };
-    std::atomic<float> mid { 0.5f };
-    std::atomic<float> treble { 0.5f };
-    std::atomic<float> presence { 0.5f };
-    std::atomic<float> reverbMix { 0.3f };
-    std::atomic<float> compression { 0.5f };
-    std::atomic<bool> bypass { false };
+    std::atomic<float> gainParam { 0.5f };
+    std::atomic<float> driveParam { 0.3f };
+    std::atomic<float> bassParam { 0.5f };
+    std::atomic<float> midParam { 0.5f };
+    std::atomic<float> trebleParam { 0.5f };
+    std::atomic<float> presenceParam { 0.5f };
+    std::atomic<float> reverbParam { 0.3f };
+    std::atomic<float> compressionParam { 0.4f };
+    std::atomic<float> delayParam { 0.2f };
+    std::atomic<float> chorusParam { 0.2f };
+    std::atomic<bool> bypassParam { false };
     
     // DSP Chain
     juce::dsp::ProcessorChain<
-        juce::dsp::Gain<float>,
-        GainStage,
-        ToneStack,
-        Distortion,
-        Compressor,
-        Reverb,
-        juce::dsp::DryWetMix<float>
+        juce::dsp::Gain<float>,           // Input gain
+        juce::dsp::ProcessorChain<
+            juce::dsp::IIR::Filter<float>, // Bass
+            juce::dsp::IIR::Filter<float>, // Mid
+            juce::dsp::IIR::Filter<float>, // Treble
+            juce::dsp::IIR::Filter<float>  // Presence
+        >,
+        juce::dsp::WaveShaper<float>,     // Distortion
+        juce::dsp::Compressor<float>,     // Compression
+        juce::dsp::Reverb,                // Reverb
+        juce::dsp::DelayLine<float>,      // Delay
+        juce::dsp::Chorus<float>,         // Chorus
+        juce::dsp::DryWetMix<float>       // Mix
     > dspChain;
     
-    // Processing state
     bool isPrepared { false };
     double currentSampleRate { 44100.0 };
-    int currentBlockSize { 512 };
     
-    // Level meters (atomic for thread-safe access)
+    // Level meters
     std::atomic<float> inputLevel { 0.0f };
     std::atomic<float> outputLevel { 0.0f };
     

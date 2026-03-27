@@ -1,61 +1,84 @@
 #include "PluginEditor.h"
+#include "PluginProcessor.h"
+#include "lookandfeel/CustomLookAndFeel.h"
+#include "components/SkeuomorphicKnob.h"
+#include "components/LedIndicator.h"
+#include "components/MeterDisplay.h"
+#include "components/OpenGLVisualizer.h"
+#include "components/PresetSelector.h"
+#include "components/TestKeyboard.h"
 
 namespace fleen
 {
 
-// ============================================================================
-// Construction / Destruction
-// ============================================================================
-
 PluginEditor::PluginEditor (PluginProcessor& p)
     : AudioProcessorEditor (p)
     , processor (p)
-    , gainKnob ("GAIN")
-    , driveKnob ("DRIVE")
-    , bassKnob ("BASS")
-    , midKnob ("MID")
-    , trebleKnob ("TREBLE")
-    , presenceKnob ("PRESENCE")
-    , reverbKnob ("REVERB")
-    , compressionKnob ("COMP")
-    , powerLed (LedIndicator::Color::red)
-    , bypassLed (LedIndicator::Color::blue)
+    , customLookAndFeel (new CustomLookAndFeel())
+    , gainKnob (new SkeuomorphicKnob ("GAIN"))
+    , driveKnob (new SkeuomorphicKnob ("DRIVE"))
+    , bassKnob (new SkeuomorphicKnob ("BASS"))
+    , midKnob (new SkeuomorphicKnob ("MID"))
+    , trebleKnob (new SkeuomorphicKnob ("TREBLE"))
+    , presenceKnob (new SkeuomorphicKnob ("PRESENCE"))
+    , reverbKnob (new SkeuomorphicKnob ("REVERB"))
+    , compressionKnob (new SkeuomorphicKnob ("COMP"))
+    , delayKnob (new SkeuomorphicKnob ("DELAY"))
+    , chorusKnob (new SkeuomorphicKnob ("CHORUS"))
+    , depthKnob (new SkeuomorphicKnob ("DEPTH"))
+    , speedKnob (new SkeuomorphicKnob ("SPEED"))
+    , powerLed (new LedIndicator (LedIndicator::Color::red))
+    , bypassLed (new LedIndicator (LedIndicator::Color::blue))
+    , inputMeter (new MeterDisplay())
+    , outputMeter (new MeterDisplay())
+    , visualizer (new OpenGLVisualizer())
+    , presetSelector (new PresetSelector (p))
+    , testKeyboard (new TestKeyboard (p))
     , bypassButton ("BYPASS")
 {
-    // Set custom look and feel
-    setLookAndFeel (&customLookAndFeel);
-    
-    // Setup size based on Golden Ratio
-    constexpr int baseWidth = 800;
-    constexpr int baseHeight = 500;
-    setSize (baseWidth, baseHeight);
+    setLookAndFeel (customLookAndFeel);
+    setSize (1000, 600);
     setResizable (true, true);
-    setResizeLimits (600, 400, 1600, 1000);
     
-    // Setup all components
     setupComponents();
     attachParameters();
-    setupOpenGL();
     
-    // Start timer for meter updates
-    startTimer (meterUpdateInterval);
+    startTimer (30);
 }
 
 PluginEditor::~PluginEditor()
 {
     stopTimer();
     setLookAndFeel (nullptr);
+    delete customLookAndFeel;
+    delete gainKnob;
+    delete driveKnob;
+    delete bassKnob;
+    delete midKnob;
+    delete trebleKnob;
+    delete presenceKnob;
+    delete reverbKnob;
+    delete compressionKnob;
+    delete delayKnob;
+    delete chorusKnob;
+    delete depthKnob;
+    delete speedKnob;
+    delete powerLed;
+    delete bypassLed;
+    delete inputMeter;
+    delete outputMeter;
+    delete visualizer;
+    delete presetSelector;
+    delete testKeyboard;
 }
-
-// ============================================================================
-// Component Interface
-// ============================================================================
 
 void PluginEditor::paint (juce::Graphics& g)
 {
-    // Draw premium dark background with subtle gradient
+    g.setRenderQuality (juce::Graphics::highRenderingQuality);
+    
+    // Premium dark gradient background
     juce::ColourGradient gradient (
-        juce::Colour::fromRGB (30, 30, 35),
+        juce::Colour::fromRGB (35, 35, 40),
         0.0f, 0.0f,
         juce::Colour::fromRGB (20, 20, 25),
         0.0f, static_cast<float> (getHeight()),
@@ -63,226 +86,151 @@ void PluginEditor::paint (juce::Graphics& g)
     );
     g.setGradientFill (gradient);
     g.fillRect (getLocalBounds());
-    
-    // Draw subtle brushed metal texture overlay
-    g.setColour (juce::Colour::fromRGBA (255, 255, 255, 3));
-    g.fillRect (getLocalBounds());
 }
 
 void PluginEditor::resized()
 {
     const auto bounds = getLocalBounds();
-    const auto width = bounds.getWidth();
-    const auto height = bounds.getHeight();
-
-    // Golden Ratio layout: 61.8% main panel, 38.2% sidebar
-    const float mainPanelRatio = 0.618f;
-    const int mainPanelWidth = static_cast<int> (width * mainPanelRatio);
-    const int sidebarWidth = width - mainPanelWidth;
-
-    // Main Panel (left side - controls)
-    auto mainBounds = bounds;
-    mainPanel.setBounds (mainBounds.removeFromLeft (mainPanelWidth));
-
-    // Sidebar (right side - visualizer and meters)
-    sidebar.setBounds (mainBounds);
-
-    // Layout main panel with Golden Ratio spacing
-    const int spacing = getSpacing (2); // Base spacing tier
-    const int topMargin = getSpacing (3);
-    const int bottomMargin = getSpacing (3);
-    const int leftMargin = spacing;
-    const int rightMargin = spacing;
-
-    auto mainContent = mainPanel.getLocalBounds()
-        .reduced (leftMargin, topMargin)
-        .translated (0, 0);
-    mainContent.setHeight (mainContent.getHeight() - bottomMargin);
-    mainContent.setWidth (mainContent.getWidth() - rightMargin);
+    const int spacing = 16;
     
-    // Top row: Gain and Drive (primary controls)
-    const int knobSize = juce::jmin (120, mainContent.getWidth() / 4);
-    const int knobRowHeight = knobSize + getSpacing (4);
-    auto topRow = mainContent.removeFromTop (knobRowHeight);
+    // Top bar: Preset selector
+    presetSelector->setBounds (bounds.removeFromTop (50).reduced (spacing, 0));
     
-    gainKnob.setBounds (topRow.removeFromLeft (knobSize).withSizeKeepingCentre (knobSize, knobSize));
-    topRow.removeFromLeft (spacing);
-    driveKnob.setBounds (topRow.removeFromLeft (knobSize).withSizeKeepingCentre (knobSize, knobSize));
+    // Main area: 70% controls, 30% visualizer
+    const int mainHeight = static_cast<int> (bounds.getHeight() * 0.65);
+    auto mainArea = bounds.removeFromTop (mainHeight);
     
-    // Middle section: Tone stack (Bass, Mid, Treble, Presence)
-    const int toneKnobSize = juce::jmin (90, mainContent.getWidth() / 5);
-    const int toneRowHeight = toneKnobSize + getSpacing (4);
-    auto toneRow = mainContent.removeFromTop (toneRowHeight);
+    // Left: Controls (61.8%)
+    const int controlsWidth = static_cast<int> (mainArea.getWidth() * 0.618);
+    mainPanel.setBounds (mainArea.removeFromLeft (controlsWidth).reduced (spacing));
     
-    bassKnob.setBounds (toneRow.removeFromLeft (toneKnobSize).withSizeKeepingCentre (toneKnobSize, toneKnobSize));
-    toneRow.removeFromLeft (spacing / 2);
-    midKnob.setBounds (toneRow.removeFromLeft (toneKnobSize).withSizeKeepingCentre (toneKnobSize, toneKnobSize));
-    toneRow.removeFromLeft (spacing / 2);
-    trebleKnob.setBounds (toneRow.removeFromLeft (toneKnobSize).withSizeKeepingCentre (toneKnobSize, toneKnobSize));
-    toneRow.removeFromLeft (spacing / 2);
-    presenceKnob.setBounds (toneRow.removeFromLeft (toneKnobSize).withSizeKeepingCentre (toneKnobSize, toneKnobSize));
+    // Right: Visualizer
+    sidebar.setBounds (mainArea.reduced (spacing));
     
-    // Bottom row: Reverb, Compression, and Bypass
-    const int smallKnobSize = juce::jmin (80, mainContent.getWidth() / 4);
-    auto bottomRow = mainContent.removeFromTop (smallKnobSize + getSpacing (3));
+    // Bottom: Test keyboard
+    bottomPanel.setBounds (bounds.reduced (spacing));
+    testKeyboard->setBounds (bottomPanel.getLocalBounds());
     
-    reverbKnob.setBounds (bottomRow.removeFromLeft (smallKnobSize).withSizeKeepingCentre (smallKnobSize, smallKnobSize));
-    bottomRow.removeFromLeft (spacing);
-    compressionKnob.setBounds (bottomRow.removeFromLeft (smallKnobSize).withSizeKeepingCentre (smallKnobSize, smallKnobSize));
+    // Layout controls in grid
+    auto controls = mainPanel.getLocalBounds();
+    const int knobSize = 90;
+    const int rowHeight = knobSize + 40;
     
-    // Bypass button
-    const int buttonWidth = 100;
-    const int buttonHeight = 40;
-    auto buttonArea = bottomRow.removeFromRight (buttonWidth).withSizeKeepingCentre (buttonWidth, buttonHeight);
-    bypassButton.setBounds (buttonArea);
+    // Row 1: Gain, Drive
+    auto row1 = controls.removeFromTop (rowHeight);
+    gainKnob->setBounds (row1.removeFromLeft (knobSize + 40).withSizeKeepingCentre (knobSize, knobSize));
+    driveKnob->setBounds (row1.removeFromLeft (knobSize + 40).withSizeKeepingCentre (knobSize, knobSize));
     
-    // Power LED indicator
-    powerLed.setBounds (mainContent.removeFromBottom (30).removeFromLeft (30));
+    // Row 2: Bass, Mid, Treble, Presence
+    auto row2 = controls.removeFromTop (rowHeight);
+    bassKnob->setBounds (row2.removeFromLeft (knobSize + 20).withSizeKeepingCentre (knobSize, knobSize));
+    midKnob->setBounds (row2.removeFromLeft (knobSize + 20).withSizeKeepingCentre (knobSize, knobSize));
+    trebleKnob->setBounds (row2.removeFromLeft (knobSize + 20).withSizeKeepingCentre (knobSize, knobSize));
+    presenceKnob->setBounds (row2.removeFromLeft (knobSize + 20).withSizeKeepingCentre (knobSize, knobSize));
     
-    // Layout sidebar
-    auto sidebarContent = sidebar.getLocalBounds().reduced (spacing);
+    // Row 3: Reverb, Compression, Delay, Chorus
+    auto row3 = controls.removeFromTop (rowHeight);
+    reverbKnob->setBounds (row3.removeFromLeft (knobSize + 20).withSizeKeepingCentre (knobSize, knobSize));
+    compressionKnob->setBounds (row3.removeFromLeft (knobSize + 20).withSizeKeepingCentre (knobSize, knobSize));
+    delayKnob->setBounds (row3.removeFromLeft (knobSize + 20).withSizeKeepingCentre (knobSize, knobSize));
+    chorusKnob->setBounds (row3.removeFromLeft (knobSize + 20).withSizeKeepingCentre (knobSize, knobSize));
     
-    // Preset selector at top
-    const int presetHeight = 40;
-    presetBox.setBounds (sidebarContent.removeFromTop (presetHeight));
+    // Row 4: Depth, Speed, Bypass
+    auto row4 = controls.removeFromTop (rowHeight);
+    depthKnob->setBounds (row4.removeFromLeft (knobSize + 20).withSizeKeepingCentre (knobSize, knobSize));
+    speedKnob->setBounds (row4.removeFromLeft (knobSize + 20).withSizeKeepingCentre (knobSize, knobSize));
     
-    sidebarContent.removeFromTop (spacing);
+    auto bypassArea = row4.removeFromRight (120);
+    bypassButton.setBounds (bypassArea.withSizeKeepingCentre (100, 40));
     
-    // Visualizer (main area)
-    const int visualizerHeight = static_cast<int> (sidebarContent.getHeight() * 0.6f);
-    visualizer.setBounds (sidebarContent.removeFromTop (visualizerHeight));
+    // Visualizer area
+    visualizer->setBounds (sidebar.getLocalBounds().removeFromTop (static_cast<int> (sidebar.getHeight() * 0.6)));
     
-    sidebarContent.removeFromTop (spacing);
-    
-    // Meters at bottom
-    auto meterArea = sidebarContent;
-    const int meterWidth = meterArea.getWidth() / 3;
-    inputMeter.setBounds (meterArea.removeFromLeft (meterWidth));
-    meterArea.removeFromLeft (spacing / 2);
-    outputMeter.setBounds (meterArea.removeFromLeft (meterWidth));
-    meterArea.removeFromLeft (spacing / 2);
-    bypassLed.setBounds (meterArea.removeFromLeft (30).withSizeKeepingCentre (30, 30));
+    // Meters and LEDs
+    auto bottomSidebar = sidebar.getLocalBounds().removeFromBottom (100);
+    inputMeter->setBounds (bottomSidebar.removeFromLeft (60));
+    bottomSidebar.removeFromLeft (spacing);
+    outputMeter->setBounds (bottomSidebar.removeFromLeft (60));
+    bottomSidebar.removeFromLeft (spacing);
+    powerLed->setBounds (bottomSidebar.removeFromLeft (40).withSizeKeepingCentre (30, 30));
+    bottomSidebar.removeFromLeft (spacing);
+    bypassLed->setBounds (bottomSidebar.removeFromLeft (40).withSizeKeepingCentre (30, 30));
 }
-
-void PluginEditor::visibilityChanged()
-{
-    // Refresh preset list when editor becomes visible
-    if (isVisible())
-    {
-        presetBox.clear();
-        const auto& presets = processor.getPresetManager().getPresetList();
-        for (int i = 0; i < presets.size(); ++i)
-        {
-            presetBox.addItem (presets[i].name, i + 1);
-        }
-        presetBox.setSelectedId (processor.getPresetManager().getCurrentPresetIndex() + 1);
-    }
-}
-
-// ============================================================================
-// Timer Interface
-// ============================================================================
-
-void PluginEditor::timerCallback()
-{
-    // Update meters at 60 FPS
-    inputMeter.setLevel (processor.getInputLevel());
-    outputMeter.setLevel (processor.getOutputLevel());
-    
-    // Update visualizer
-    visualizer.updateDisplay();
-    
-    // Trigger repaint for smooth animations
-    repaint();
-}
-
-// ============================================================================
-// Layout Helpers
-// ============================================================================
 
 void PluginEditor::setupComponents()
 {
-    // Add main components
+    // Add all components
     addAndMakeVisible (mainPanel);
     addAndMakeVisible (sidebar);
+    addAndMakeVisible (bottomPanel);
+    addAndMakeVisible (presetSelector);
+    addAndMakeVisible (testKeyboard);
+    addAndMakeVisible (visualizer);
+    addAndMakeVisible (inputMeter);
+    addAndMakeVisible (outputMeter);
+    addAndMakeVisible (powerLed);
+    addAndMakeVisible (bypassLed);
+    addAndMakeVisible (bypassButton);
     
-    // Add knobs to main panel
-    mainPanel.addAndMakeVisible (gainKnob);
-    mainPanel.addAndMakeVisible (driveKnob);
-    mainPanel.addAndMakeVisible (bassKnob);
-    mainPanel.addAndMakeVisible (midKnob);
-    mainPanel.addAndMakeVisible (trebleKnob);
-    mainPanel.addAndMakeVisible (presenceKnob);
-    mainPanel.addAndMakeVisible (reverbKnob);
-    mainPanel.addAndMakeVisible (compressionKnob);
+    addAndMakeVisible (gainKnob);
+    addAndMakeVisible (driveKnob);
+    addAndMakeVisible (bassKnob);
+    addAndMakeVisible (midKnob);
+    addAndMakeVisible (trebleKnob);
+    addAndMakeVisible (presenceKnob);
+    addAndMakeVisible (reverbKnob);
+    addAndMakeVisible (compressionKnob);
+    addAndMakeVisible (delayKnob);
+    addAndMakeVisible (chorusKnob);
+    addAndMakeVisible (depthKnob);
+    addAndMakeVisible (speedKnob);
     
-    // Add LEDs
-    mainPanel.addAndMakeVisible (powerLed);
-    sidebar.addAndMakeVisible (bypassLed);
-    
-    // Add meters
-    sidebar.addAndMakeVisible (inputMeter);
-    sidebar.addAndMakeVisible (outputMeter);
-    
-    // Add visualizer
-    sidebar.addAndMakeVisible (visualizer);
-    
-    // Add bypass button
+    // Style bypass button
     bypassButton.setColour (juce::TextButton::buttonColourId, juce::Colour::fromRGB (60, 60, 70));
     bypassButton.setColour (juce::TextButton::buttonOnColourId, juce::Colour::fromRGB (0, 150, 200));
     bypassButton.setColour (juce::TextButton::textColourOffId, juce::Colours::white);
     bypassButton.setColour (juce::TextButton::textColourOnId, juce::Colours::white);
     bypassButton.setClickingTogglesState (true);
-    mainPanel.addAndMakeVisible (bypassButton);
     
-    // Add preset combo box
-    presetBox.setColour (juce::ComboBox::backgroundColourId, juce::Colour::fromRGB (40, 40, 45));
-    presetBox.setColour (juce::ComboBox::textColourId, juce::Colours::white);
-    presetBox.setColour (juce::ComboBox::outlineColourId, juce::Colour::fromRGB (80, 80, 90));
-    sidebar.addAndMakeVisible (presetBox);
-    
-    // Bypass button listener
-    bypassButton.onClick = [this]
+    // Preset selector callbacks
+    presetSelector->onPresetChanged = [this] (int index)
     {
-        processor.getParameters().getParameter ("bypass")->setValueNotifyingHost (bypassButton.getToggleState() ? 1.0f : 0.0f);
+        processor.getPresetManager().loadPreset (index);
     };
     
-    // Preset box listener
-    presetBox.onChange = [this]
+    presetSelector->onPresetSaved = [this] (const juce::String& name)
     {
-        const int index = presetBox.getSelectedId() - 1;
-        if (index >= 0 && index < processor.getPresetManager().getPresetList().size())
-        {
-            processor.getPresetManager().loadPreset (index);
-        }
+        processor.getPresetManager().savePreset (name, "User");
+        presetSelector->loadPresets();
     };
+    
+    // Load presets
+    presetSelector->loadPresets();
 }
 
 void PluginEditor::attachParameters()
 {
-    // Attach knobs to parameters
-    gainAttachment = std::make_unique<Attachment> (
-        processor.getParameters(), "gain", gainKnob.getSlider());
-    driveAttachment = std::make_unique<Attachment> (
-        processor.getParameters(), "drive", driveKnob.getSlider());
-    bassAttachment = std::make_unique<Attachment> (
-        processor.getParameters(), "bass", bassKnob.getSlider());
-    midAttachment = std::make_unique<Attachment> (
-        processor.getParameters(), "mid", midKnob.getSlider());
-    trebleAttachment = std::make_unique<Attachment> (
-        processor.getParameters(), "treble", trebleKnob.getSlider());
-    presenceAttachment = std::make_unique<Attachment> (
-        processor.getParameters(), "presence", presenceKnob.getSlider());
-    reverbAttachment = std::make_unique<Attachment> (
-        processor.getParameters(), "reverb", reverbKnob.getSlider());
-    compressionAttachment = std::make_unique<Attachment> (
-        processor.getParameters(), "compression", compressionKnob.getSlider());
+    gainAttachment = std::make_unique<Attachment> (processor.getParameters(), "gain", gainKnob->getSlider());
+    driveAttachment = std::make_unique<Attachment> (processor.getParameters(), "drive", driveKnob->getSlider());
+    bassAttachment = std::make_unique<Attachment> (processor.getParameters(), "bass", bassKnob->getSlider());
+    midAttachment = std::make_unique<Attachment> (processor.getParameters(), "mid", midKnob->getSlider());
+    trebleAttachment = std::make_unique<Attachment> (processor.getParameters(), "treble", trebleKnob->getSlider());
+    presenceAttachment = std::make_unique<Attachment> (processor.getParameters(), "presence", presenceKnob->getSlider());
+    reverbAttachment = std::make_unique<Attachment> (processor.getParameters(), "reverb", reverbKnob->getSlider());
+    compressionAttachment = std::make_unique<Attachment> (processor.getParameters(), "compression", compressionKnob->getSlider());
+    delayAttachment = std::make_unique<Attachment> (processor.getParameters(), "delay", delayKnob->getSlider());
+    chorusAttachment = std::make_unique<Attachment> (processor.getParameters(), "chorus", chorusKnob->getSlider());
+    depthAttachment = std::make_unique<Attachment> (processor.getParameters(), "depth", depthKnob->getSlider());
+    speedAttachment = std::make_unique<Attachment> (processor.getParameters(), "speed", speedKnob->getSlider());
+    bypassAttachment = std::make_unique<ButtonAttachment> (processor.getParameters(), "bypass", bypassButton);
 }
 
-void PluginEditor::setupOpenGL()
+void PluginEditor::timerCallback()
 {
-    // Initialize OpenGL context for hardware-accelerated rendering
-    visualizer.setProcessor (&processor);
+    inputMeter->setLevel (processor.getInputLevel());
+    outputMeter->setLevel (processor.getOutputLevel());
+    visualizer->updateDisplay();
+    repaint();
 }
 
 } // namespace fleen

@@ -1,11 +1,13 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "state/StateManager.h"
+#include "state/PresetManager.h"
 
 namespace fleen
 {
 
 // ============================================================================
-// Construction / Destruction
+// Construction
 // ============================================================================
 
 PluginProcessor::PluginProcessor()
@@ -15,7 +17,7 @@ PluginProcessor::PluginProcessor()
     , parameters (*this, nullptr, juce::Identifier ("FleenElGuitar"), createParameterLayout())
     , presetManager (*this)
 {
-    // Attach listeners to parameters
+    // Attach parameter listeners
     parameters.addParameterListener ("gain", this);
     parameters.addParameterListener ("drive", this);
     parameters.addParameterListener ("bass", this);
@@ -24,15 +26,16 @@ PluginProcessor::PluginProcessor()
     parameters.addParameterListener ("presence", this);
     parameters.addParameterListener ("reverb", this);
     parameters.addParameterListener ("compression", this);
+    parameters.addParameterListener ("delay", this);
+    parameters.addParameterListener ("chorus", this);
     parameters.addParameterListener ("bypass", this);
     
-    // Initialize preset manager with factory presets
+    // Load factory presets
     presetManager.loadFactoryPresets();
 }
 
 PluginProcessor::~PluginProcessor()
 {
-    // Ensure DSP is released
     releaseResources();
 }
 
@@ -43,19 +46,14 @@ PluginProcessor::~PluginProcessor()
 void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     currentSampleRate = sampleRate;
-    currentBlockSize = samplesPerBlock;
-    
     prepareDSP();
     resetDSP();
-    
     isPrepared = true;
 }
 
 void PluginProcessor::releaseResources()
 {
     isPrepared = false;
-    
-    // Reset DSP chain
     dspChain.reset();
 }
 
@@ -67,19 +65,17 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     const auto totalNumInputChannels  = getTotalNumInputChannels();
     const auto totalNumOutputChannels = getTotalNumOutputChannels();
     
-    // Clear output channels if needed
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
     
-    // Bypass processing
-    if (bypass.load())
+    if (bypassParam.load())
     {
         inputLevel = 0.0f;
         outputLevel = 0.0f;
         return;
     }
     
-    // Calculate input level (RMS)
+    // Calculate input level
     {
         float sum = 0.0f;
         const auto numSamples = buffer.getNumSamples();
@@ -96,36 +92,32 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         inputLevel = juce::jmap (rms, -60.0f, 0.0f, 0.0f, 1.0f);
     }
     
-    // Process through DSP chain
+    // Process audio
     if (isPrepared)
     {
         juce::dsp::AudioBlock<float> block (buffer);
         juce::dsp::ProcessContextReplacing<float> context (block);
         
-        // Update DSP parameters from atomics
-        auto& gainStage = dspChain.get<0>();
-        gainStage.setGain (gain.load());
+        // Update DSP parameters
+        auto& inputGain = dspChain.get<0>();
+        inputGain.setGain (gainParam.load());
         
-        auto& toneStack = dspChain.get<1>();
-        toneStack.setBass (bass.load());
-        toneStack.setMid (mid.load());
-        toneStack.setTreble (treble.load());
-        toneStack.setPresence (presence.load());
+        auto& eq = dspChain.get<1>();
+        auto& bass = eq.get<0>();
+        auto& mid = eq.get<1>();
+        auto& treble = eq.get<2>();
+        auto& presence = eq.get<3>();
         
         auto& distortion = dspChain.get<2>();
-        distortion.setDrive (drive.load());
-        
         auto& compressor = dspChain.get<3>();
-        compressor.setAmount (compression.load());
-        
         auto& reverb = dspChain.get<4>();
-        reverb.setMix (reverbMix.load());
+        auto& delay = dspChain.get<5>();
+        auto& chorus = dspChain.get<6>();
         
-        // Process
         dspChain.process (context);
     }
     
-    // Calculate output level (RMS)
+    // Calculate output level
     {
         float sum = 0.0f;
         const auto numSamples = buffer.getNumSamples();
@@ -168,146 +160,71 @@ void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
 }
 
 // ============================================================================
-// APVTS Listener
+// Parameter Handling
 // ============================================================================
 
 void PluginProcessor::parameterChanged (const juce::String& parameterID, float newValue)
 {
-    // Update atomic parameters for real-time access
-    if (parameterID == "gain")
-        gain = newValue;
-    else if (parameterID == "drive")
-        drive = newValue;
-    else if (parameterID == "bass")
-        bass = newValue;
-    else if (parameterID == "mid")
-        mid = newValue;
-    else if (parameterID == "treble")
-        treble = newValue;
-    else if (parameterID == "presence")
-        presence = newValue;
-    else if (parameterID == "reverb")
-        reverbMix = newValue;
-    else if (parameterID == "compression")
-        compression = newValue;
-    else if (parameterID == "bypass")
-        bypass = newValue > 0.5f;
+    if (parameterID == "gain") gainParam = newValue;
+    else if (parameterID == "drive") driveParam = newValue;
+    else if (parameterID == "bass") bassParam = newValue;
+    else if (parameterID == "mid") midParam = newValue;
+    else if (parameterID == "treble") trebleParam = newValue;
+    else if (parameterID == "presence") presenceParam = newValue;
+    else if (parameterID == "reverb") reverbParam = newValue;
+    else if (parameterID == "compression") compressionParam = newValue;
+    else if (parameterID == "delay") delayParam = newValue;
+    else if (parameterID == "chorus") chorusParam = newValue;
+    else if (parameterID == "bypass") bypassParam = newValue > 0.5f;
 }
-
-// ============================================================================
-// Parameter Layout
-// ============================================================================
 
 juce::AudioProcessorValueTreeState::ParameterLayout PluginProcessor::createParameterLayout()
 {
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
     
-    // Gain Stage
-    layout.add (std::make_unique<juce::AudioParameterFloat> (
-        "gain", "Gain",
-        juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f),
-        0.5f,
-        "Gain",
-        juce::AudioProcessorParameter::genericParameter,
-        [] (float value, int maxLength) { return juce::String (value * 100.0f, 1).substring (0, maxLength); },
-        [] (const juce::String& text) { return text.getFloatValue() / 100.0f; }
-    ));
+    auto makeParam = [] (const juce::String& id, const juce::String& name, 
+                         float defaultVal, float min = 0.0f, float max = 1.0f)
+    {
+        return std::make_unique<juce::AudioParameterFloat> (
+            id, name,
+            juce::NormalisableRange<float> (min, max, 0.01f),
+            defaultVal,
+            name,
+            juce::AudioProcessorParameter::genericParameter,
+            [] (float value, int maxLength) { return juce::String (value * 100.0f, 1).substring (0, maxLength); },
+            [] (const juce::String& text) { return text.getFloatValue() / 100.0f; }
+        );
+    };
     
-    // Drive / Distortion
-    layout.add (std::make_unique<juce::AudioParameterFloat> (
-        "drive", "Drive",
-        juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f),
-        0.5f,
-        "Drive",
-        juce::AudioProcessorParameter::genericParameter,
-        [] (float value, int maxLength) { return juce::String (value * 100.0f, 1).substring (0, maxLength); },
-        [] (const juce::String& text) { return text.getFloatValue() / 100.0f; }
-    ));
+    // Core tone controls
+    layout.add (makeParam ("gain", "Gain", 0.5f));
+    layout.add (makeParam ("drive", "Drive", 0.3f));
+    layout.add (makeParam ("bass", "Bass", 0.5f));
+    layout.add (makeParam ("mid", "Mid", 0.5f));
+    layout.add (makeParam ("treble", "Treble", 0.5f));
+    layout.add (makeParam ("presence", "Presence", 0.5f));
     
-    // Tone Stack - Bass
-    layout.add (std::make_unique<juce::AudioParameterFloat> (
-        "bass", "Bass",
-        juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f),
-        0.5f,
-        "Bass",
-        juce::AudioProcessorParameter::genericParameter,
-        [] (float value, int maxLength) { return juce::String (value * 100.0f, 1).substring (0, maxLength); },
-        [] (const juce::String& text) { return text.getFloatValue() / 100.0f; }
-    ));
+    // Effects
+    layout.add (makeParam ("reverb", "Reverb", 0.3f));
+    layout.add (makeParam ("compression", "Compression", 0.4f));
+    layout.add (makeParam ("delay", "Delay", 0.2f));
+    layout.add (makeParam ("chorus", "Chorus", 0.2f));
     
-    // Tone Stack - Mid
-    layout.add (std::make_unique<juce::AudioParameterFloat> (
-        "mid", "Mid",
-        juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f),
-        0.5f,
-        "Mid",
-        juce::AudioProcessorParameter::genericParameter,
-        [] (float value, int maxLength) { return juce::String (value * 100.0f, 1).substring (0, maxLength); },
-        [] (const juce::String& text) { return text.getFloatValue() / 100.0f; }
-    ));
-    
-    // Tone Stack - Treble
-    layout.add (std::make_unique<juce::AudioParameterFloat> (
-        "treble", "Treble",
-        juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f),
-        0.5f,
-        "Treble",
-        juce::AudioProcessorParameter::genericParameter,
-        [] (float value, int maxLength) { return juce::String (value * 100.0f, 1).substring (0, maxLength); },
-        [] (const juce::String& text) { return text.getFloatValue() / 100.0f; }
-    ));
-    
-    // Presence
-    layout.add (std::make_unique<juce::AudioParameterFloat> (
-        "presence", "Presence",
-        juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f),
-        0.5f,
-        "Presence",
-        juce::AudioProcessorParameter::genericParameter,
-        [] (float value, int maxLength) { return juce::String (value * 100.0f, 1).substring (0, maxLength); },
-        [] (const juce::String& text) { return text.getFloatValue() / 100.0f; }
-    ));
-    
-    // Reverb Mix
-    layout.add (std::make_unique<juce::AudioParameterFloat> (
-        "reverb", "Reverb",
-        juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f),
-        0.3f,
-        "Reverb",
-        juce::AudioProcessorParameter::genericParameter,
-        [] (float value, int maxLength) { return juce::String (value * 100.0f, 1).substring (0, maxLength); },
-        [] (const juce::String& text) { return text.getFloatValue() / 100.0f; }
-    ));
-    
-    // Compression
-    layout.add (std::make_unique<juce::AudioParameterFloat> (
-        "compression", "Compression",
-        juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f),
-        0.5f,
-        "Compression",
-        juce::AudioProcessorParameter::genericParameter,
-        [] (float value, int maxLength) { return juce::String (value * 100.0f, 1).substring (0, maxLength); },
-        [] (const juce::String& text) { return text.getFloatValue() / 100.0f; }
-    ));
-    
-    // Bypass
-    layout.add (std::make_unique<juce::AudioParameterBool> (
-        "bypass", "Bypass",
-        false
-    ));
+    // Utility
+    layout.add (std::make_unique<juce::AudioParameterBool> ("bypass", "Bypass", false));
     
     return layout;
 }
 
 // ============================================================================
-// DSP Chain
+// DSP
 // ============================================================================
 
 void PluginProcessor::prepareDSP()
 {
     juce::dsp::ProcessSpec spec;
     spec.sampleRate = currentSampleRate;
-    spec.maximumBlockSize = static_cast<juce::uint32> (currentBlockSize);
+    spec.maximumBlockSize = 1024;
     spec.numChannels = static_cast<juce::uint32> (getTotalNumOutputChannels());
     
     dspChain.prepare (spec);
