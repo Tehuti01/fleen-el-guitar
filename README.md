@@ -8,7 +8,7 @@
 [![License](https://img.shields.io/github/license/Tehuti01/fleen-el-guitar?style=for-the-badge)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-macOS-lightgrey?style=for-the-badge)](https://github.com/Tehuti01/fleen-el-guitar)
 
-[Download](#-installation) • [Documentation](docs/) • [Issues](https://github.com/Tehuti01/fleen-el-guitar/issues)
+[Download](#-download) • [Documentation](docs/) • [Issues](https://github.com/Tehuti01/fleen-el-guitar/issues)
 
 </div>
 
@@ -27,97 +27,56 @@
 
 ---
 
+## 📦 Download
+
+### Quick Download
+
+**Download the plugin zip file:**
+
+[**📥 Download FleenElGuitar-macOS.zip**](https://github.com/Tehuti01/fleen-el-guitar/releases/latest)
+
+---
+
 ## 📦 Installation
 
-### Method 1: One-Click Install (Recommended) ⭐
+### Step 1: Download
 
-```bash
-# Download and run the installer
-curl -fsSL https://raw.githubusercontent.com/Tehuti01/fleen-el-guitar/main/install.sh -o install.sh
-chmod +x install.sh
-./install.sh
+Download the latest release from:
+```
+https://github.com/Tehuti01/fleen-el-guitar/releases/latest
 ```
 
-**Or use the one-liner:**
+You'll get a file called `FleenElGuitar-macOS.zip`
 
+### Step 2: Extract
+
+Double-click the `.zip` file to extract it. You'll see a folder called `FleenElGuitar.vst3`
+
+### Step 3: Install
+
+**Copy the `FleenElGuitar.vst3` folder to your VST3 plugins folder:**
+
+#### macOS (Recommended Location)
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Tehuti01/fleen-el-guitar/main/install.sh | bash
+cp -R ~/Downloads/FleenElGuitar.vst3 ~/Library/Audio/Plug-Ins/VST3/
 ```
 
-### All Installer Commands
-
+#### macOS (System-wide)
 ```bash
-# Install the plugin
-curl -fsSL .../install.sh | bash
-
-# Uninstall the plugin
-curl -fsSL .../install.sh | bash -s -- --uninstall
-
-# Check if plugin is installed
-curl -fsSL .../install.sh | bash -s -- --status
-
-# Show installation info
-curl -fsSL .../install.sh | bash -s -- --info
-
-# Show help
-curl -fsSL .../install.sh | bash -s -- --help
-
-# Or download and use locally
-curl -fsSL .../install.sh -o install.sh
-chmod +x install.sh
-./install.sh --uninstall
+sudo cp -R ~/Downloads/FleenElGuitar.vst3 /Library/Audio/Plug-Ins/VST3/
 ```
 
-The installer will:
-- ✅ Find or create your VST3 folder
-- ✅ Download the latest release
-- ✅ Install to the correct location
-- ✅ Verify the installation
-- ✅ Show manual instructions if needed
-
-### Method 2: Manual Download
-
-1. **Download** the latest release:
-   ```
-   https://github.com/Tehuti01/fleen-el-guitar/releases/latest
-   ```
-
-2. **Extract** the downloaded `.zip` file
-
-3. **Copy** the `.vst3` file to your VST3 folder:
-   ```bash
-   cp -R FleenElGuitar.vst3 ~/Library/Audio/Plug-Ins/VST3/
-   ```
-
-### Method 3: Homebrew (macOS)
-
-```bash
-# Install Homebrew if you don't have it
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-# Install the plugin
-brew tap Tehuti01/audio
-brew install fleen-el-guitar
+#### Windows
+```
+C:\Program Files\Common Files\VST3\
 ```
 
----
-
-## ✅ Verify Installation
-
-After installation, verify the plugin is installed:
-
-```bash
-# Check if plugin exists
-ls -la ~/Library/Audio/Plug-Ins/VST3/FleenElGuitar.vst3
-
-# You should see the plugin folder listed
+#### Linux
+```
+~/.vst3/
 ```
 
----
-
-## 🎛️ Using the Plugin
-
-### In Your DAW
+### Step 4: Use in Your DAW
 
 1. **Restart your DAW** (Logic Pro, Ableton Live, GarageBand, etc.)
 
@@ -129,9 +88,24 @@ ls -la ~/Library/Audio/Plug-Ins/VST3/FleenElGuitar.vst3
 
 3. **Find the plugin** in your plugin browser:
    - Search for "Fleen" or "Fleen El-Guitar"
-   - It's in the "Instrument" or "Effect" category
 
 4. **Load a preset** and start playing!
+
+---
+
+## ✅ Verify Installation
+
+Open Terminal and run:
+
+```bash
+ls -la ~/Library/Audio/Plug-Ins/VST3/FleenElGuitar.vst3
+```
+
+You should see the plugin folder listed.
+
+---
+
+## 🎛️ Using the Plugin
 
 ### Factory Presets
 
@@ -180,7 +154,7 @@ ls -la ~/Library/Audio/Plug-Ins/VST3/FleenElGuitar.vst3
 
 ### Plugin Not Showing in DAW
 
-**Step 1:** Verify installation
+**Step 1:** Verify the file is in the correct location
 ```bash
 ls -la ~/Library/Audio/Plug-Ins/VST3/FleenElGuitar.vst3
 ```
@@ -190,32 +164,9 @@ ls -la ~/Library/Audio/Plug-Ins/VST3/FleenElGuitar.vst3
 chmod -R 755 ~/Library/Audio/Plug-Ins/VST3/FleenElGuitar.vst3
 ```
 
-**Step 3:** Rescan plugins in your DAW
+**Step 3:** Restart your DAW completely
 
-**Step 4:** Restart your DAW completely
-
-### Installation Failed
-
-If the automatic installer fails:
-
-1. **Check the error message** - it will tell you what went wrong
-
-2. **Try manual installation:**
-   ```bash
-   # Download from releases
-   curl -L https://github.com/Tehuti01/fleen-el-guitar/releases/latest/download/FleenElGuitar-macOS.zip -o fleen.zip
-   
-   # Extract
-   unzip fleen.zip
-   
-   # Install manually
-   cp -R FleenElGuitar.vst3 ~/Library/Audio/Plug-Ins/VST3/
-   ```
-
-3. **Check internet connection:**
-   ```bash
-   ping github.com
-   ```
+**Step 4:** Rescan plugins in your DAW settings
 
 ### Get Help
 

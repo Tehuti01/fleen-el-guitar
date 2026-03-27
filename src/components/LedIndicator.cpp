@@ -23,8 +23,6 @@ LedIndicator::~LedIndicator()
 
 void LedIndicator::paint (juce::Graphics& g)
 {
-    g.setRenderQuality (juce::Graphics::highRenderingQuality);
-    
     const auto bounds = getLocalBounds().toFloat();
     
     // Draw glow effect when on
@@ -148,8 +146,7 @@ void LedIndicator::drawGlow (juce::Graphics& g, const juce::Rectangle<float>& bo
         glowColour.withMultipliedAlpha (brightness * 0.4f),
         centre.getX(), centre.getY(),
         glowColour.withMultipliedAlpha (0.0f),
-        centre.getX(), centre.getY(),
-        glowRadius,
+        centre.getX() + glowRadius, centre.getY(),
         true
     );
     

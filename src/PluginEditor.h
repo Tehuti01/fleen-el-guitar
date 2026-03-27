@@ -38,7 +38,7 @@ private:
     void attachParameters();
     void timerCallback() override;
 
-    PluginProcessor& audioProcessor;
+    PluginProcessor& processor;
     CustomLookAndFeel* customLookAndFeel;
     
     // Main panels
