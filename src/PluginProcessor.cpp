@@ -113,13 +113,11 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         
         // Update DSP parameters
         auto& inputGain = dspChain.get<0>();
-        inputGain.setGainLinear (gainParam.load());
+        const float drive = driveParam.load();
+        inputGain.setGainLinear (gainParam.load() * (1.0f + drive * 5.0f));
         
         auto& distortion = dspChain.get<1>();
-        distortion.functionToUse = [this] (float x) { 
-            const float drive = driveParam.load();
-            return std::tanh (x * (1.0f + drive * 10.0f)); 
-        };
+        distortion.functionToUse = [] (float x) { return std::tanh (x); };
         
         auto& compressor = dspChain.get<2>();
         compressor.setThreshold (juce::jmap (compressionParam.load(), 0.0f, 1.0f, -40.0f, 0.0f));
