@@ -60,8 +60,8 @@ public:
     // State Management
     // ========================================================================
     
-    juce::AudioProcessorValueTreeState& getParameters() { return parameters; }
-    const juce::AudioProcessorValueTreeState& getParameters() const { return parameters; }
+    juce::AudioProcessorValueTreeState& getAPVTS() { return parameters; }
+    const juce::AudioProcessorValueTreeState& getAPVTS() const { return parameters; }
     
     StateManager& getStateManager() { return stateManager; }
     PresetManager& getPresetManager() { return presetManager; }

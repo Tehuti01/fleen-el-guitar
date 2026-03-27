@@ -44,6 +44,30 @@ chmod +x install.sh
 curl -fsSL https://raw.githubusercontent.com/Tehuti01/fleen-el-guitar/main/install.sh | bash
 ```
 
+### All Installer Commands
+
+```bash
+# Install the plugin
+curl -fsSL .../install.sh | bash
+
+# Uninstall the plugin
+curl -fsSL .../install.sh | bash -s -- --uninstall
+
+# Check if plugin is installed
+curl -fsSL .../install.sh | bash -s -- --status
+
+# Show installation info
+curl -fsSL .../install.sh | bash -s -- --info
+
+# Show help
+curl -fsSL .../install.sh | bash -s -- --help
+
+# Or download and use locally
+curl -fsSL .../install.sh -o install.sh
+chmod +x install.sh
+./install.sh --uninstall
+```
+
 The installer will:
 - ✅ Find or create your VST3 folder
 - ✅ Download the latest release

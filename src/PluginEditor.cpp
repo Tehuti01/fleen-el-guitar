@@ -203,19 +203,19 @@ void PluginEditor::setupComponents()
 
 void PluginEditor::attachParameters()
 {
-    gainAttachment = std::make_unique<Attachment> (processor.getParameters(), "gain", gainKnob->getSlider());
-    driveAttachment = std::make_unique<Attachment> (processor.getParameters(), "drive", driveKnob->getSlider());
-    bassAttachment = std::make_unique<Attachment> (processor.getParameters(), "bass", bassKnob->getSlider());
-    midAttachment = std::make_unique<Attachment> (processor.getParameters(), "mid", midKnob->getSlider());
-    trebleAttachment = std::make_unique<Attachment> (processor.getParameters(), "treble", trebleKnob->getSlider());
-    presenceAttachment = std::make_unique<Attachment> (processor.getParameters(), "presence", presenceKnob->getSlider());
-    reverbAttachment = std::make_unique<Attachment> (processor.getParameters(), "reverb", reverbKnob->getSlider());
-    compressionAttachment = std::make_unique<Attachment> (processor.getParameters(), "compression", compressionKnob->getSlider());
-    delayAttachment = std::make_unique<Attachment> (processor.getParameters(), "delay", delayKnob->getSlider());
-    chorusAttachment = std::make_unique<Attachment> (processor.getParameters(), "chorus", chorusKnob->getSlider());
-    depthAttachment = std::make_unique<Attachment> (processor.getParameters(), "depth", depthKnob->getSlider());
-    speedAttachment = std::make_unique<Attachment> (processor.getParameters(), "speed", speedKnob->getSlider());
-    bypassAttachment = std::make_unique<ButtonAttachment> (processor.getParameters(), "bypass", bypassButton);
+    gainAttachment = std::make_unique<Attachment> (processor.getAPVTS(), "gain", gainKnob->getSlider());
+    driveAttachment = std::make_unique<Attachment> (processor.getAPVTS(), "drive", driveKnob->getSlider());
+    bassAttachment = std::make_unique<Attachment> (processor.getAPVTS(), "bass", bassKnob->getSlider());
+    midAttachment = std::make_unique<Attachment> (processor.getAPVTS(), "mid", midKnob->getSlider());
+    trebleAttachment = std::make_unique<Attachment> (processor.getAPVTS(), "treble", trebleKnob->getSlider());
+    presenceAttachment = std::make_unique<Attachment> (processor.getAPVTS(), "presence", presenceKnob->getSlider());
+    reverbAttachment = std::make_unique<Attachment> (processor.getAPVTS(), "reverb", reverbKnob->getSlider());
+    compressionAttachment = std::make_unique<Attachment> (processor.getAPVTS(), "compression", compressionKnob->getSlider());
+    delayAttachment = std::make_unique<Attachment> (processor.getAPVTS(), "delay", delayKnob->getSlider());
+    chorusAttachment = std::make_unique<Attachment> (processor.getAPVTS(), "chorus", chorusKnob->getSlider());
+    depthAttachment = std::make_unique<Attachment> (processor.getAPVTS(), "depth", depthKnob->getSlider());
+    speedAttachment = std::make_unique<Attachment> (processor.getAPVTS(), "speed", speedKnob->getSlider());
+    bypassAttachment = std::make_unique<ButtonAttachment> (processor.getAPVTS(), "bypass", bypassButton);
 }
 
 void PluginEditor::timerCallback()
