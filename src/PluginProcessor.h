@@ -1,11 +1,10 @@
 #pragma once
 
-#include <JuceHeader.h>
+#include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_dsp/juce_dsp.h>
+#include <juce_gui_extra/juce_gui_extra.h>
 #include "dsp/GainStage.h"
 #include "dsp/ToneStack.h"
-#include "dsp/Distortion.h"
-#include "dsp/Reverb.h"
-#include "dsp/Compressor.h"
 #include "state/StateManager.h"
 #include "state/PresetManager.h"
 
@@ -75,6 +74,12 @@ public:
     
     /** @brief Get current drive parameter (thread-safe) */
     float getDrive() const { return drive.load(); }
+    
+    /** @brief Get input level for meters (thread-safe) */
+    float getInputLevel() const { return inputLevel.load(); }
+    
+    /** @brief Get output level for meters (thread-safe) */
+    float getOutputLevel() const { return outputLevel.load(); }
 
 private:
     // ========================================================================
@@ -122,7 +127,7 @@ private:
     
     // DSP Chain
     juce::dsp::ProcessorChain<
-        juce::dsp::GainChain<juce::dsp::Gain<float>>,
+        juce::dsp::Gain<float>,
         GainStage,
         ToneStack,
         Distortion,

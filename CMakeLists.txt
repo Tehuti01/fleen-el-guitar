@@ -8,13 +8,15 @@ cmake_minimum_required(VERSION 3.24)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum macOS version")
+set(CMAKE_C_COMPILER clang)
+set(CMAKE_CXX_COMPILER clang++)
 
 # Project definition
 project(FleenElGuitar 
     VERSION 1.0.0
     DESCRIPTION "Professional Guitar Processing VST3 Plugin"
-    HOMEPAGE_URL "https://github.com/tehuti01/Fleen-el-guitar-vst"
-    LANGUAGES CXX
+    HOMEPAGE_URL "https://github.com/Tehuti01/fleen-el-guitar"
+    LANGUAGES CXX C
 )
 
 # ============================================================================
@@ -41,7 +43,8 @@ include(${CPM_DOWNLOAD_LOCATION})
 CPMAddPackage(
     NAME JUCE
     GITHUB_REPOSITORY juce-framework/JUCE
-    VERSION 8.0.4
+    GIT_TAG master
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     OPTIONS
         "JUCE_BUILD_EXAMPLES=OFF"
         "JUCE_BUILD_EXTRAS=OFF"
@@ -55,33 +58,36 @@ CPMAddPackage(
 # Additional Modules
 # ============================================================================
 
+# Note: These modules are optional and can be enabled if needed
+# For a simpler build, we're using only core JUCE functionality
+
 # Melatonin Blur - High-performance shadows for neumorphism
-CPMAddPackage(
-    NAME melatonin_blur
-    GITHUB_REPOSITORY sudara/melatonin_blur
-    GIT_TAG main
-)
+# CPMAddPackage(
+#     NAME melatonin_blur
+#     GITHUB_REPOSITORY sudara/melatonin_blur
+#     GIT_TAG main
+# )
 
 # Melatonin Inspector - Component hierarchy auditing
-CPMAddPackage(
-    NAME melatonin_inspector
-    GITHUB_REPOSITORY sudara/melatonin_inspector
-    GIT_TAG main
-)
+# CPMAddPackage(
+#     NAME melatonin_inspector
+#     GITHUB_REPOSITORY sudara/melatonin_inspector
+#     GIT_TAG main
+# )
 
 # JIVE - Declarative UI layouts
-CPMAddPackage(
-    NAME JIVE
-    GITHUB_REPOSITORY ImJimmi/JIVE
-    GIT_TAG main
-)
+# CPMAddPackage(
+#     NAME JIVE
+#     GITHUB_REPOSITORY ImJimmi/JIVE
+#     GIT_TAG main
+# )
 
 # Foleys GUI Magic - Runtime GUI designer
-CPMAddPackage(
-    NAME foleys_gui_magic
-    GITHUB_REPOSITORY ffAudio/foleys_gui_magic
-    GIT_TAG main
-)
+# CPMAddPackage(
+#     NAME foleys_gui_magic
+#     GITHUB_REPOSITORY foleys/foleys_gui_magic
+#     GIT_TAG main
+# )
 
 # ============================================================================
 # Plugin Configuration
@@ -99,6 +105,7 @@ set(PLUGIN_MANUFACTURER_CODE FlnA)
 
 juce_add_plugin(FleenElGuitar
     COMPANY_NAME "${PLUGIN_COMPANY}"
+    BUNDLE_ID com.fleenaudio.fleenelguitar
     IS_SYNTH FALSE
     NEEDS_MIDI_INPUT FALSE
     NEEDS_MIDI_OUTPUT FALSE
@@ -134,9 +141,6 @@ target_sources(FleenElGuitar
         # DSP Components
         src/dsp/GainStage.h
         src/dsp/ToneStack.h
-        src/dsp/Distortion.h
-        src/dsp/Reverb.h
-        src/dsp/Compressor.h
         
         # GUI Components
         src/components/SkeuomorphicKnob.h
@@ -156,7 +160,6 @@ target_sources(FleenElGuitar
         
         # Utilities
         src/utils/GoldenRatio.h
-        src/utils/Assets.h
 )
 
 # ============================================================================
@@ -172,6 +175,7 @@ target_include_directories(FleenElGuitar
         ${CMAKE_CURRENT_SOURCE_DIR}/src/state
         ${CMAKE_CURRENT_SOURCE_DIR}/src/utils
         ${CMAKE_CURRENT_SOURCE_DIR}/assets
+        ${CMAKE_CURRENT_BINARY_DIR}/FleenElGuitar_artefacts/JuceLibraryCode
 )
 
 # ============================================================================
@@ -201,10 +205,6 @@ target_link_libraries(FleenElGuitar
         juce::juce_dsp
         juce::juce_gui_extra
         juce::juce_opengl
-        melatonin::melatonin_blur
-        melatonin::melatonin_inspector
-        JIVE::JIVE
-        foleys::foleys_gui_magic
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
@@ -215,24 +215,19 @@ target_link_libraries(FleenElGuitar
 # Binary Resources
 # ============================================================================
 
+# Create placeholder assets directory if it doesn't exist
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts")
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/images")
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/presets")
+
+# Create minimal placeholder files for build
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/presets/default.json")
+    file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/assets/presets/default.json" "{}")
+endif()
+
 juce_add_binary_data(BinaryData
     SOURCES
-        assets/fonts/Inter-Regular.ttf
-        assets/fonts/Inter-Bold.ttf
-        assets/images/knob_metal_01.png
-        assets/images/knob_metal_02.png
-        assets/images/knob_indicator.png
-        assets/images/led_red_off.png
-        assets/images/led_red_on.png
-        assets/images/led_blue_off.png
-        assets/images/led_blue_on.png
-        assets/images/faceplate_brush.png
-        assets/images/background_dark.png
         assets/presets/default.json
-        assets/presets/clean.json
-        assets/presets/crunch.json
-        assets/presets/high_gain.json
-        assets/presets/lead.json
 )
 
 target_compile_definitions(BinaryData

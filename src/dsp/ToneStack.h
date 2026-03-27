@@ -1,6 +1,7 @@
 #pragma once
 
-#include <JuceHeader.h>
+#include <juce_core/juce_core.h>
+#include <juce_dsp/juce_dsp.h>
 
 namespace fleen
 {
@@ -247,7 +248,7 @@ public:
     {
         sampleRate = spec.sampleRate;
         
-        reverb.prepare (*spec);
+        reverb.prepare (spec);
         
         // Set default reverb parameters
         juce::Reverb::Parameters params;
@@ -296,7 +297,7 @@ private:
     // ========================================================================
     
     double sampleRate { 44100.0 };
-    juce::dsp::Reverb<float> reverb;
+    juce::dsp::Reverb reverb;
 };
 
 } // namespace fleen

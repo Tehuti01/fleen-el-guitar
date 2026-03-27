@@ -1,6 +1,8 @@
 #pragma once
 
-#include <JuceHeader.h>
+#include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_gui_extra/juce_gui_extra.h>
+#include <juce_opengl/juce_opengl.h>
 #include "PluginProcessor.h"
 #include "lookandfeel/CustomLookAndFeel.h"
 #include "components/SkeuomorphicKnob.h"
@@ -109,6 +111,7 @@ private:
     
     // Parameter Attachments
     using Attachment = juce::AudioProcessorValueTreeState::SliderAttachment;
+    using ButtonAttachment = juce::AudioProcessorValueTreeState::ButtonAttachment;
     std::unique_ptr<Attachment> gainAttachment;
     std::unique_ptr<Attachment> driveAttachment;
     std::unique_ptr<Attachment> bassAttachment;
@@ -117,7 +120,7 @@ private:
     std::unique_ptr<Attachment> presenceAttachment;
     std::unique_ptr<Attachment> reverbAttachment;
     std::unique_ptr<Attachment> compressionAttachment;
-    std::unique_ptr<Attachment> bypassAttachment;
+    std::unique_ptr<ButtonAttachment> bypassAttachment;
     
     // Timer for meter updates (60 FPS)
     static constexpr int meterUpdateInterval = 16; // ~60 Hz

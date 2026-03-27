@@ -1,14 +1,17 @@
 #pragma once
 
-#include <JuceHeader.h>
-#include "../PluginProcessor.h"
+#include <juce_core/juce_core.h>
+#include <juce_data_structures/juce_data_structures.h>
 
 namespace fleen
 {
 
+// Forward declaration to avoid circular dependency
+class PluginProcessor;
+
 /**
  * @brief Preset management system with JSON serialization
- * 
+ *
  * Handles loading, saving, and browsing of plugin presets.
  * Supports factory presets and user presets.
  */
@@ -18,14 +21,14 @@ public:
     // ========================================================================
     // Structures
     // ========================================================================
-    
+
     struct Preset
     {
         juce::String name;
         juce::String category;
         juce::ValueTree state;
         bool isFactoryPreset { true };
-        
+
         Preset() = default;
         Preset (const juce::String& n, const juce::String& cat, const juce::ValueTree& s, bool factory = true)
             : name (n), category (cat), state (s), isFactoryPreset (factory) {}
@@ -34,7 +37,7 @@ public:
     // ========================================================================
     // Construction / Destruction
     // ========================================================================
-    
+
     explicit PresetManager (PluginProcessor& processor);
     ~PresetManager() = default;
 

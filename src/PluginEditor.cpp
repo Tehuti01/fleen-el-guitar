@@ -74,27 +74,31 @@ void PluginEditor::resized()
     const auto bounds = getLocalBounds();
     const auto width = bounds.getWidth();
     const auto height = bounds.getHeight();
-    
+
     // Golden Ratio layout: 61.8% main panel, 38.2% sidebar
     const float mainPanelRatio = 0.618f;
     const int mainPanelWidth = static_cast<int> (width * mainPanelRatio);
     const int sidebarWidth = width - mainPanelWidth;
-    
+
     // Main Panel (left side - controls)
-    mainPanel.setBounds (bounds.removeFromLeft (mainPanelWidth));
-    
+    auto mainBounds = bounds;
+    mainPanel.setBounds (mainBounds.removeFromLeft (mainPanelWidth));
+
     // Sidebar (right side - visualizer and meters)
-    sidebar.setBounds (bounds);
-    
+    sidebar.setBounds (mainBounds);
+
     // Layout main panel with Golden Ratio spacing
     const int spacing = getSpacing (2); // Base spacing tier
     const int topMargin = getSpacing (3);
     const int bottomMargin = getSpacing (3);
     const int leftMargin = spacing;
     const int rightMargin = spacing;
-    
+
     auto mainContent = mainPanel.getLocalBounds()
-        .reduced (leftMargin, topMargin, rightMargin, bottomMargin);
+        .reduced (leftMargin, topMargin)
+        .translated (0, 0);
+    mainContent.setHeight (mainContent.getHeight() - bottomMargin);
+    mainContent.setWidth (mainContent.getWidth() - rightMargin);
     
     // Top row: Gain and Drive (primary controls)
     const int knobSize = juce::jmin (120, mainContent.getWidth() / 4);
@@ -182,8 +186,8 @@ void PluginEditor::visibilityChanged()
 void PluginEditor::timerCallback()
 {
     // Update meters at 60 FPS
-    inputMeter.setLevel (processor.inputLevel.load());
-    outputMeter.setLevel (processor.outputLevel.load());
+    inputMeter.setLevel (processor.getInputLevel());
+    outputMeter.setLevel (processor.getOutputLevel());
     
     // Update visualizer
     visualizer.updateDisplay();
@@ -240,7 +244,7 @@ void PluginEditor::setupComponents()
     // Bypass button listener
     bypassButton.onClick = [this]
     {
-        processor.parameters.getParameter ("bypass")->setValueNotifyingHost (bypassButton.getToggleState() ? 1.0f : 0.0f);
+        processor.getParameters().getParameter ("bypass")->setValueNotifyingHost (bypassButton.getToggleState() ? 1.0f : 0.0f);
     };
     
     // Preset box listener
@@ -273,8 +277,6 @@ void PluginEditor::attachParameters()
         processor.getParameters(), "reverb", reverbKnob.getSlider());
     compressionAttachment = std::make_unique<Attachment> (
         processor.getParameters(), "compression", compressionKnob.getSlider());
-    bypassAttachment = std::make_unique<Attachment> (
-        processor.getParameters(), "bypass", bypassButton);
 }
 
 void PluginEditor::setupOpenGL()
