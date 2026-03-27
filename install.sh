@@ -315,11 +315,11 @@ main() {
     echo ""
     print_info "Installing to: $VST3_INSTALL_PATH"
     echo ""
-    
+
     # Try installation methods in order
     if install_from_release; then
         print_success "Installation completed using Method 1 (Release)"
-    elif install_direct_vst3(); then
+    elif install_direct_vst3; then
         print_success "Installation completed using Method 2 (Direct)"
     else
         print_warning "Automatic installation methods failed."

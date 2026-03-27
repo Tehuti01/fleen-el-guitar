@@ -12,7 +12,9 @@
       "Bash(brew *)",
       "Bash(rm *)",
       "Bash(sed *)",
-      "Bash(chmod *)"
+      "Bash(chmod *)",
+      "Bash(curl *)",
+      "Bash(bash *)"
     ]
   }
 }
