@@ -10,7 +10,8 @@ namespace fleen
  * 
  * Real-time level meter with ballistic response and gradient coloring.
  */
-class MeterDisplay : public juce::Component
+class MeterDisplay : public juce::Component,
+                     public juce::Timer
 {
 public:
     // ========================================================================
@@ -19,6 +20,12 @@ public:
     
     MeterDisplay();
     ~MeterDisplay() override;
+
+    // ========================================================================
+    // Timer Interface
+    // ========================================================================
+    
+    void timerCallback() override;
 
     // ========================================================================
     // Component Interface

@@ -22,12 +22,8 @@ MeterDisplay::~MeterDisplay()
 // Component Interface
 // ============================================================================
 
-void MeterDisplay::paint (juce::Graphics& g)
+void MeterDisplay::timerCallback()
 {
-    g.setRenderQuality (juce::Graphics::highRenderingQuality);
-    
-    const auto bounds = getLocalBounds().toFloat();
-    
     // Apply ballistic response
     if (targetLevel > currentLevel)
     {
@@ -42,6 +38,13 @@ void MeterDisplay::paint (juce::Graphics& g)
     
     // Clamp
     currentLevel = juce::jlimit (0.0f, 1.0f, currentLevel);
+    
+    repaint();
+}
+
+void MeterDisplay::paint (juce::Graphics& g)
+{
+    const auto bounds = getLocalBounds().toFloat();
     
     // Draw background
     drawBackground (g, bounds);
