@@ -19,7 +19,8 @@ namespace fleen
  * - Premium DSP chain
  * - MIDI keyboard support
  */
-class PluginProcessor : public juce::AudioProcessor
+class PluginProcessor : public juce::AudioProcessor,
+                     public juce::AudioProcessorValueTreeState::Listener
 {
 public:
     // ========================================================================
@@ -88,7 +89,7 @@ private:
     // Parameter Handling
     // ========================================================================
     
-    void parameterChanged (const juce::String& parameterID, float newValue);
+    void parameterChanged (const juce::String& parameterID, float newValue) override;
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
     // ========================================================================

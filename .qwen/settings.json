@@ -11,7 +11,8 @@
       "Bash(cmake *)",
       "Bash(brew *)",
       "Bash(rm *)",
-      "Bash(sed *)"
+      "Bash(sed *)",
+      "Bash(chmod *)"
     ]
   }
 }

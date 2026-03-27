@@ -38,7 +38,7 @@ private:
     void attachParameters();
     void timerCallback() override;
 
-    PluginProcessor& processor;
+    PluginProcessor& audioProcessor;
     CustomLookAndFeel* customLookAndFeel;
     
     // Main panels
@@ -73,9 +73,6 @@ private:
     
     // Preset selector
     PresetSelector* presetSelector;
-    
-    // Test keyboard
-    TestKeyboard* testKeyboard;
     
     // Bypass button
     juce::TextButton bypassButton;

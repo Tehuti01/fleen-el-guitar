@@ -70,8 +70,21 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     
     if (bypassParam.load())
     {
-        inputLevel = 0.0f;
-        outputLevel = 0.0f;
+        // Calculate levels even if bypassed
+        float sum = 0.0f;
+        const auto numSamples = buffer.getNumSamples();
+        for (int channel = 0; channel < juce::jmin (2, totalNumInputChannels); ++channel)
+        {
+            auto* channelData = buffer.getReadPointer (channel);
+            for (int i = 0; i < numSamples; ++i)
+            {
+                const float sample = channelData[i];
+                sum += sample * sample;
+            }
+        }
+        const float rms = juce::Decibels::gainToDecibels (std::sqrt (sum / (buffer.getNumChannels() * numSamples)), -100.0f);
+        inputLevel = juce::jmap (rms, -60.0f, 0.0f, 0.0f, 1.0f);
+        outputLevel = inputLevel.load();
         return;
     }
     
@@ -100,11 +113,25 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         
         // Update DSP parameters
         auto& inputGain = dspChain.get<0>();
-        inputGain.setGainDecibels (juce::Decibels::gainToDecibels (gainParam.load()));
+        inputGain.setGainLinear (gainParam.load());
         
         auto& distortion = dspChain.get<1>();
+        distortion.functionToUse = [this] (float x) { 
+            const float drive = driveParam.load();
+            return std::tanh (x * (1.0f + drive * 10.0f)); 
+        };
+        
         auto& compressor = dspChain.get<2>();
+        compressor.setThreshold (juce::jmap (compressionParam.load(), 0.0f, 1.0f, -40.0f, 0.0f));
+        compressor.setRatio (4.0f);
+        
         auto& reverb = dspChain.get<3>();
+        juce::dsp::Reverb::Parameters reverbParams;
+        reverbParams.roomSize = reverbParam.load();
+        reverbParams.damping = 0.5f;
+        reverbParams.wetLevel = reverbParam.load() * 0.5f;
+        reverbParams.dryLevel = 1.0f - reverbParams.wetLevel;
+        reverb.setParameters (reverbParams);
         
         dspChain.process (context);
     }

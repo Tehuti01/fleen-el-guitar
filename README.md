@@ -2,19 +2,13 @@
 
 <div align="center">
 
-![Fleen El-Guitar Banner](docs/images/banner.png)
+**Professional Guitar Processing VST3 Plugin**
 
-**Professional Guitar Processing VST3 Plugin with Premium Skeuomorphic Interface**
+[![Release](https://img.shields.io/github/v/release/Tehuti01/fleen-el-guitar?style=for-the-badge)](https://github.com/Tehuti01/fleen-el-guitar/releases/latest)
+[![License](https://img.shields.io/github/license/Tehuti01/fleen-el-guitar?style=for-the-badge)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-macOS-lightgrey?style=for-the-badge)](https://github.com/Tehuti01/fleen-el-guitar)
 
-[![Release](https://img.shields.io/github/v/release/tehuti01/Fleen-el-guitar-vst?style=for-the-badge)](https://github.com/tehuti01/Fleen-el-guitar-vst/releases/latest)
-[![License](https://img.shields.io/github/license/tehuti01/Fleen-el-guitar-vst?style=for-the-badge)](LICENSE)
-[![Build](https://img.shields.io/github/actions/workflow/status/tehuti01/Fleen-el-guitar-vst/build.yml?style=for-the-badge)](https://github.com/tehuti01/Fleen-el-guitar-vst/actions)
-[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey?style=for-the-badge)](https://github.com/tehuti01/Fleen-el-guitar-vst)
-
-[Download](https://github.com/tehuti01/Fleen-el-guitar-vst/releases/latest) • 
-[Documentation](docs/README.md) • 
-[Discord](https://discord.gg/example) • 
-[Issues](https://github.com/tehuti01/Fleen-el-guitar-vst/issues)
+[Download](#-installation) • [Documentation](docs/) • [Issues](https://github.com/Tehuti01/fleen-el-guitar/issues)
 
 </div>
 
@@ -22,224 +16,238 @@
 
 ## 🎸 Overview
 
-**Fleen El-Guitar** is a professional-grade guitar processing VST3 plugin that combines cutting-edge DSP algorithms with a premium skeuomorphic interface. Built with JUCE 8 and modern C++20, it delivers studio-quality tone shaping with an intuitive, hardware-inspired design.
+**Fleen El-Guitar** is a professional guitar processing VST3 plugin featuring:
 
-### Key Features
-
-- 🎛️ **Premium Skeuomorphic Interface** - Hardware-inspired controls with photorealistic rendering
-- 📐 **Golden Ratio Layout** - Mathematically balanced UI design using Φ = 1.618
-- 🔥 **Professional DSP Chain** - Gain, Drive, 3-Band EQ, Presence, Reverb, and Compression
-- ✨ **OpenGL Visualizations** - Real-time waveform and spectrum displays at 60 FPS
-- 🎨 **Custom LookAndFeel** - Neumorphic shadows with Melatonin Blur integration
-- 📦 **Preset Management** - JSON-based preset system with factory and user presets
-- ⚡ **Real-Time Safe** - Lock-free, allocation-free audio processing
-- 🌐 **Cross-Platform** - macOS, Windows, and Linux support
+- 🎛️ **10 Premium Factory Presets** - From clean to high gain
+- 💎 **Skeuomorphic Interface** - Hardware-inspired premium design  
+- 📐 **Golden Ratio Layout** - Mathematically balanced UI
+- 🔥 **Professional DSP** - Gain, Drive, EQ, Reverb, Compression
+- ✨ **Real-time Visualizers** - Waveform and spectrum displays
+- 📦 **Preset Manager** - Save, load, and organize your sounds
 
 ---
 
-## 🚀 Quick Start
+## 📦 Installation
 
-### Installation
-
-#### Option 1: Homebrew (macOS)
+### Method 1: One-Click Install (Recommended) ⭐
 
 ```bash
-# Add the Homebrew tap
-brew tap tehuti01/audio
+# Download and run the installer
+curl -fsSL https://raw.githubusercontent.com/Tehuti01/fleen-el-guitar/main/install.sh -o install.sh
+chmod +x install.sh
+./install.sh
+```
+
+**Or use the one-liner:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Tehuti01/fleen-el-guitar/main/install.sh | bash
+```
+
+The installer will:
+- ✅ Find or create your VST3 folder
+- ✅ Download the latest release
+- ✅ Install to the correct location
+- ✅ Verify the installation
+- ✅ Show manual instructions if needed
+
+### Method 2: Manual Download
+
+1. **Download** the latest release:
+   ```
+   https://github.com/Tehuti01/fleen-el-guitar/releases/latest
+   ```
+
+2. **Extract** the downloaded `.zip` file
+
+3. **Copy** the `.vst3` file to your VST3 folder:
+   ```bash
+   cp -R FleenElGuitar.vst3 ~/Library/Audio/Plug-Ins/VST3/
+   ```
+
+### Method 3: Homebrew (macOS)
+
+```bash
+# Install Homebrew if you don't have it
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 # Install the plugin
+brew tap Tehuti01/audio
 brew install fleen-el-guitar
 ```
 
-#### Option 2: Install Script (macOS)
+---
+
+## ✅ Verify Installation
+
+After installation, verify the plugin is installed:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/tehuti01/Fleen-el-guitar-vst/main/scripts/install.sh | bash
+# Check if plugin exists
+ls -la ~/Library/Audio/Plug-Ins/VST3/FleenElGuitar.vst3
+
+# You should see the plugin folder listed
 ```
 
-#### Option 3: Manual Installation
+---
 
-1. Download the latest release from [Releases](https://github.com/tehuti01/Fleen-el-guitar-vst/releases/latest)
-2. Extract the archive
-3. Copy `FleenElGuitar.vst3` to your VST3 plugins directory:
-   - **macOS**: `~/Library/Audio/Plug-Ins/VST3/`
-   - **Windows**: `C:\Program Files\Common Files\VST3\`
-   - **Linux**: `~/.vst3/` or `/usr/lib/vst3/`
+## 🎛️ Using the Plugin
 
-### Building from Source
+### In Your DAW
 
-#### Prerequisites
+1. **Restart your DAW** (Logic Pro, Ableton Live, GarageBand, etc.)
 
-- **CMake** 3.24 or later
-- **C++20** compatible compiler (Clang 14+, GCC 11+, MSVC 2022+)
-- **Git** for version control
+2. **Rescan plugins** if your DAW requires it:
+   - **Logic Pro**: Automatic on launch
+   - **Ableton Live**: Preferences → Plug-Ins → Browse
+   - **GarageBand**: Automatic on launch
+   - **Cubase**: Devices → Plug-in Information → Refresh
 
-#### Build Steps
+3. **Find the plugin** in your plugin browser:
+   - Search for "Fleen" or "Fleen El-Guitar"
+   - It's in the "Instrument" or "Effect" category
+
+4. **Load a preset** and start playing!
+
+### Factory Presets
+
+| # | Preset Name | Best For |
+|---|-------------|----------|
+| 1 | Default | Starting point |
+| 2 | Crystal Clean | Clean tones |
+| 3 | Warm Jazz | Jazz guitar |
+| 4 | Classic Crunch | Rock rhythm |
+| 5 | Blues Breaker | Blues lead |
+| 6 | High Gain Metal | Metal rhythm |
+| 7 | Singing Lead | Lead guitar |
+| 8 | Ambient Shimmer | Ambient textures |
+| 9 | Funk Rhythm | Funk/Pop |
+| 10 | Modern Prog | Progressive |
+
+---
+
+## 🎚️ Controls
+
+| Control | Function |
+|---------|----------|
+| **GAIN** | Input level |
+| **DRIVE** | Distortion amount |
+| **BASS** | Low frequencies (200Hz) |
+| **MID** | Mid frequencies (1kHz) |
+| **TREBLE** | High frequencies (3kHz) |
+| **PRESENCE** | Ultra-high frequencies (5kHz) |
+| **REVERB** | Reverb mix |
+| **COMPRESSION** | Dynamic compression |
+| **BYPASS** | Enable/disable effect |
+
+---
+
+## 📁 File Locations
+
+| Type | Location |
+|------|----------|
+| **VST3 Plugin** | `~/Library/Audio/Plug-Ins/VST3/FleenElGuitar.vst3` |
+| **User Presets** | `~/Library/Application Support/Fleen/El-Guitar/Presets/` |
+| **Logs** | `~/Library/Logs/Fleen/` |
+
+---
+
+## 🐛 Troubleshooting
+
+### Plugin Not Showing in DAW
+
+**Step 1:** Verify installation
+```bash
+ls -la ~/Library/Audio/Plug-Ins/VST3/FleenElGuitar.vst3
+```
+
+**Step 2:** Check file permissions
+```bash
+chmod -R 755 ~/Library/Audio/Plug-Ins/VST3/FleenElGuitar.vst3
+```
+
+**Step 3:** Rescan plugins in your DAW
+
+**Step 4:** Restart your DAW completely
+
+### Installation Failed
+
+If the automatic installer fails:
+
+1. **Check the error message** - it will tell you what went wrong
+
+2. **Try manual installation:**
+   ```bash
+   # Download from releases
+   curl -L https://github.com/Tehuti01/fleen-el-guitar/releases/latest/download/FleenElGuitar-macOS.zip -o fleen.zip
+   
+   # Extract
+   unzip fleen.zip
+   
+   # Install manually
+   cp -R FleenElGuitar.vst3 ~/Library/Audio/Plug-Ins/VST3/
+   ```
+
+3. **Check internet connection:**
+   ```bash
+   ping github.com
+   ```
+
+### Get Help
+
+- **Documentation:** [docs/](docs/)
+- **Issues:** [GitHub Issues](https://github.com/Tehuti01/fleen-el-guitar/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/Tehuti01/fleen-el-guitar/discussions)
+
+---
+
+## 🏗️ Building from Source
 
 ```bash
 # Clone the repository
-git clone https://github.com/tehuti01/Fleen-el-guitar-vst.git
-cd Fleen-el-guitar-vst
+git clone https://github.com/Tehuti01/fleen-el-guitar.git
+cd fleen-el-guitar
 
 # Create build directory
 mkdir build && cd build
 
-# Configure with CMake
-cmake .. -DCMAKE_BUILD_TYPE=Release
+# Configure
+cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release
 
 # Build
 cmake --build . --config Release
 
-# Install (optional)
-cmake --install . --prefix ~/.local
+# The VST3 will be in:
+# build/FleenElGuitar_artefacts/Release/VST3/FleenElGuitar.vst3
 ```
 
----
+### Requirements
 
-## 🎛️ Interface
-
-<div align="center">
-  <img src="docs/images/interface.png" alt="Fleen El-Guitar Interface" width="800"/>
-</div>
-
-### Controls
-
-| Control | Description | Range |
-|---------|-------------|-------|
-| **GAIN** | Input gain stage | 0-100% |
-| **DRIVE** | Distortion amount | 0-100% |
-| **BASS** | Low frequency control | 0-100% |
-| **MID** | Mid frequency control | 0-100% |
-| **TREBLE** | High frequency control | 0-100% |
-| **PRESENCE** | Ultra-high frequency boost | 0-100% |
-| **REVERB** | Reverb mix level | 0-100% |
-| **COMP** | Compression amount | 0-100% |
-| **BYPASS** | Effect bypass toggle | On/Off |
-
-### Visualizers
-
-- **Waveform Display** - Real-time input/output waveform visualization
-- **Spectrum Analyzer** - Frequency spectrum display
-- **Input/Output Meters** - VU-style level meters with ballistic response
-- **LED Indicators** - Power and bypass status indicators
-
----
-
-## 📦 Presets
-
-Fleen El-Guitar includes 5 factory presets:
-
-| Preset | Category | Description |
-|--------|----------|-------------|
-| **Default** | Factory | Balanced starting point |
-| **Clean** | Factory | Crystal clean tone |
-| **Crunch** | Factory | Light overdrive |
-| **High Gain** | Factory | Heavy distortion |
-| **Lead** | Factory | Singing lead tone |
-
-### Managing Presets
-
-Presets are stored in JSON format at:
-- **macOS**: `~/Library/Application Support/Fleen/El-Guitar/Presets/`
-- **Windows**: `%APPDATA%\Fleen\El-Guitar\Presets\`
-- **Linux**: `~/.config/Fleen/El-Guitar/Presets/`
-
----
-
-## 🏗️ Architecture
-
-### Technical Stack
-
-| Component | Technology |
-|-----------|------------|
-| **Framework** | JUCE 8 |
-| **Language** | C++20 |
-| **Build System** | CMake 3.24+ |
-| **GUI Extension** | JIVE, Foleys GUI Magic |
-| **Effects** | Melatonin Blur, Melatonin Inspector |
-| **Graphics** | OpenGL-accelerated |
-
-### DSP Chain
-
-```
-Input → Gain → Tone Stack (Bass/Mid/Treble/Presence) 
-       → Distortion → Compressor → Reverb → Output
-```
-
-All processing is:
-- ✅ Lock-free
-- ✅ Allocation-free
-- ✅ Real-time safe
-- ✅ Sample-accurate
-
----
-
-## 📖 Documentation
-
-- [**Getting Started**](docs/GETTING_STARTED.md) - Installation and setup guide
-- [**User Manual**](docs/USER_MANUAL.md) - Complete control reference
-- [**Developer Guide**](docs/DEVELOPER_GUIDE.md) - Building and extending
-- [**API Reference**](docs/API.md) - Code documentation
-- [**FAQ**](docs/FAQ.md) - Frequently asked questions
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-### Development Workflow
-
-```bash
-# Fork the repository
-git fork https://github.com/tehuti01/Fleen-el-guitar-vst
-
-# Clone your fork
-git clone https://github.com/YOUR_USERNAME/Fleen-el-guitar-vst
-
-# Create a feature branch
-git checkout -b feature/your-feature
-
-# Make changes and commit
-git add .
-git commit -m "feat: add your feature"
-
-# Push and create PR
-git push origin feature/your-feature
-```
+- macOS 10.15 or later
+- CMake 3.24+
+- Ninja build system
+- Xcode Command Line Tools
 
 ---
 
 ## 📄 License
 
-This project is licensed under the **GPL-3.0-or-later** License. See the [LICENSE](LICENSE) file for details.
+GPL-3.0-or-later - See [LICENSE](LICENSE) for details.
 
 ---
 
-## 🙏 Acknowledgments
+## 🙏 Credits
 
-Built with amazing open-source libraries:
-
-- [**JUCE**](https://juce.com/) - Cross-platform audio framework
-- [**Melatonin Blur**](https://github.com/sudara/melatonin_blur) - High-performance shadows
-- [**JIVE**](https://github.com/ImJimmi/JIVE) - Declarative UI layouts
-- [**Foleys GUI Magic**](https://github.com/ffAudio/foleys_gui_magic) - Runtime GUI designer
-
----
-
-## 📬 Contact
-
-- **Website**: [Fleen Audio](https://fleenaudio.example.com)
-- **Twitter**: [@FleenAudio](https://twitter.com/FleenAudio)
-- **Email**: support@fleenaudio.example.com
-- **Discord**: [Join our community](https://discord.gg/example)
+Built with:
+- [JUCE Framework](https://juce.com/)
+- [CMake](https://cmake.org/)
 
 ---
 
 <div align="center">
 
-**Made with ❤️ for musicians and audio engineers**
+**Made with ❤️ for musicians**
 
-⭐ Star this repo if you find it useful!
+[Download Latest](https://github.com/Tehuti01/fleen-el-guitar/releases/latest) • [Report Issue](https://github.com/Tehuti01/fleen-el-guitar/issues)
 
 </div>

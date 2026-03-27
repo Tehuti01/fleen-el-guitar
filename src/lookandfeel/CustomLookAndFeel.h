@@ -49,7 +49,7 @@ public:
                       juce::ComboBox&) override;
     
     /** @brief Draw popup menu with dark theme */
-    void drawPopupMenuBackground (juce::Graphics&, juce::PopupMenu&) override;
+    void drawPopupMenuBackground (juce::Graphics&, int width, int height) override;
 
     // ========================================================================
     // Typography
@@ -128,11 +128,11 @@ private:
     juce::ColourGradient darkGradient;
     
     // Shadow colours for neumorphism
-    juce::Colour shadowLight { 255, 255, 255, 40 };
-    juce::Colour shadowDark { 0, 0, 0, 80 };
+    juce::Colour shadowLight = juce::Colour::fromRGBA (255, 255, 255, 40);
+    juce::Colour shadowDark = juce::Colour::fromRGBA (0, 0, 0, 80);
     
     // Typography
-    juce::Font baseFont { "Inter", 14.0f, juce::Font::plain };
+    juce::Font baseFont { juce::FontOptions ("Inter", 14.0f, juce::Font::plain) };
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CustomLookAndFeel)
 };

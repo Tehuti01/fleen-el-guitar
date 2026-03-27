@@ -188,7 +188,7 @@ void CustomLookAndFeel::drawComboBox (juce::Graphics& g, int width, int height,
     if (text.isNotEmpty())
     {
         g.setColour (comboBox.findColour (juce::ComboBox::textColourId));
-        g.setFont (14.0f);
+        g.setFont (juce::FontOptions (14.0f));
         g.drawText (text, boxBounds.reduced (8, 0), juce::Justification::centredLeft);
     }
     
@@ -207,9 +207,9 @@ void CustomLookAndFeel::drawComboBox (juce::Graphics& g, int width, int height,
     g.strokePath (arrow, juce::PathStrokeType (2.0f));
 }
 
-void CustomLookAndFeel::drawPopupMenuBackground (juce::Graphics& g, juce::PopupMenu& menu)
+void CustomLookAndFeel::drawPopupMenuBackground (juce::Graphics& g, int width, int height)
 {
-    const auto bounds = menu.getComponent().getLocalBounds().toFloat();
+    const auto bounds = juce::Rectangle<float> (0.0f, 0.0f, (float) width, (float) height);
     
     // Draw dark background
     g.setColour (juce::Colour::fromRGB (35, 35, 40));
@@ -238,7 +238,7 @@ void CustomLookAndFeel::drawText (juce::Graphics& g, juce::String text,
                                   juce::Colour colour, int justification)
 {
     g.setColour (colour);
-    g.setFont (fontSize);
+    g.setFont (juce::FontOptions (fontSize));
     g.drawText (text, area, justification, 1);
 }
 
