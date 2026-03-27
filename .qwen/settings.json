@@ -14,7 +14,8 @@
       "Bash(sed *)",
       "Bash(chmod *)",
       "Bash(curl *)",
-      "Bash(bash *)"
+      "Bash(bash *)",
+      "Bash(sleep *)"
     ]
   }
 }
