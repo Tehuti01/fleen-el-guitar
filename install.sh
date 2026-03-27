@@ -2,16 +2,20 @@
 # ============================================================================
 # Fleen El-Guitar VST3 - Official Installer
 # ============================================================================
-# This script downloads and installs the VST3 plugin directly to your system
-# Works with automatic fallback options if any step fails
+# Install, uninstall, or manage your Fleen El-Guitar VST3 plugin
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/Tehuti01/fleen-el-guitar/main/install.sh -o install.sh
-#   chmod +x install.sh
-#   ./install.sh
-#
-# Or one-liner:
+#   # Install
 #   curl -fsSL https://raw.githubusercontent.com/Tehuti01/fleen-el-guitar/main/install.sh | bash
+#
+#   # Uninstall
+#   curl -fsSL https://raw.githubusercontent.com/Tehuti01/fleen-el-guitar/main/install.sh | bash -s -- --uninstall
+#
+#   # Check status
+#   curl -fsSL .../install.sh | bash -s -- --status
+#
+#   # Show help
+#   curl -fsSL .../install.sh | bash -s -- --help
 # ============================================================================
 
 set -e
@@ -33,11 +37,15 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 BOLD='\033[1m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
 # Installation paths
 DEFAULT_VST3_PATH="$HOME/Library/Audio/Plug-Ins/VST3"
 SYSTEM_VST3_PATH="/Library/Audio/Plug-Ins/VST3"
+PRESET_PATH="$HOME/Library/Application Support/Fleen/El-Guitar/Presets"
+
+# Action
+ACTION="install"
 
 # ============================================================================
 # Helper Functions
@@ -57,7 +65,79 @@ print_warning() { echo -e "${YELLOW}⚠${NC} $1"; }
 print_error() { echo -e "${RED}✗${NC} $1"; }
 print_step() { echo -e "${CYAN}▶${NC} $1"; }
 
-# Check if running on macOS
+show_help() {
+    cat << EOF
+${BOLD}Fleen El-Guitar VST3 Installer${NC}
+
+${BOLD}USAGE:${NC}
+    install.sh [OPTIONS]
+
+${BOLD}OPTIONS:${NC}
+    --install       Install the plugin (default)
+    --uninstall     Remove the plugin completely
+    --remove        Same as --uninstall
+    --status        Check if plugin is installed
+    --info          Show installation information
+    --help          Show this help message
+
+${BOLD}EXAMPLES:${NC}
+    # Install plugin
+    curl -fsSL https://raw.githubusercontent.com/Tehuti01/fleen-el-guitar/main/install.sh | bash
+
+    # Uninstall plugin
+    curl -fsSL https://raw.githubusercontent.com/Tehuti01/fleen-el-guitar/main/install.sh | bash -s -- --uninstall
+
+    # Check status
+    curl -fsSL https://raw.githubusercontent.com/Tehuti01/fleen-el-guitar/main/install.sh | bash -s -- --status
+
+${BOLD}MANUAL COMMANDS:${NC}
+    # Install
+    curl -fsSL https://raw.githubusercontent.com/Tehuti01/fleen-el-guitar/main/install.sh | bash
+
+    # Uninstall
+    curl -fsSL https://raw.githubusercontent.com/Tehuti01/fleen-el-guitar/main/install.sh | bash -s -- --uninstall
+
+    # Check if installed
+    ls -la ~/Library/Audio/Plug-Ins/VST3/${PLUGIN_NAME}.vst3
+
+EOF
+    exit 0
+}
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --install)
+            ACTION="install"
+            shift
+            ;;
+        --uninstall|--remove)
+            ACTION="uninstall"
+            shift
+            ;;
+        --status|--check)
+            ACTION="status"
+            shift
+            ;;
+        --info)
+            ACTION="info"
+            shift
+            ;;
+        --help|-h)
+            show_help
+            ;;
+        *)
+            print_error "Unknown option: $1"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
+done
+
+# ============================================================================
+# Check Functions
+# ============================================================================
+
 check_macos() {
     if [[ "$(uname)" != "Darwin" ]]; then
         print_error "This installer is for macOS only."
@@ -67,7 +147,6 @@ check_macos() {
     fi
 }
 
-# Check internet connection
 check_internet() {
     if ! ping -c 1 github.com &> /dev/null; then
         print_error "No internet connection. Please check your network."
@@ -75,40 +154,85 @@ check_internet() {
     fi
 }
 
-# Find existing VST3 folder or create default
 find_vst3_folder() {
-    print_step "Looking for VST3 folder..."
-    
-    # Check common locations
     if [[ -d "$DEFAULT_VST3_PATH" ]]; then
         VST3_INSTALL_PATH="$DEFAULT_VST3_PATH"
-        print_success "Found VST3 folder: $VST3_INSTALL_PATH"
         return 0
     fi
     
     if [[ -d "$SYSTEM_VST3_PATH" ]]; then
         VST3_INSTALL_PATH="$SYSTEM_VST3_PATH"
-        print_success "Found system VST3 folder: $VST3_INSTALL_PATH"
         return 0
     fi
     
-    # Create default folder
-    print_warning "No VST3 folder found. Creating default folder..."
-    mkdir -p "$DEFAULT_VST3_PATH"
-    chmod 755 "$DEFAULT_VST3_PATH"
     VST3_INSTALL_PATH="$DEFAULT_VST3_PATH"
-    print_success "Created: $VST3_INSTALL_PATH"
 }
 
 # ============================================================================
-# Installation Methods
+# Status & Info Functions
 # ============================================================================
 
-# Method 1: Download from GitHub Releases (FASTEST - Recommended)
+check_status() {
+    print_step "Checking installation status..."
+    echo ""
+    
+    local plugin_path="$VST3_INSTALL_PATH/${PLUGIN_NAME}.vst3"
+    
+    if [[ -d "$plugin_path" ]]; then
+        print_success "Plugin is INSTALLED"
+        echo ""
+        echo -e "  ${GREEN}Location:${NC} $plugin_path"
+        echo -e "  ${GREEN}Size:${NC} $(du -sh "$plugin_path" 2>/dev/null | cut -f1)"
+        echo -e "  ${GREEN}Modified:${NC} $(ls -ld "$plugin_path" | awk '{print $6, $7, $8}')"
+        echo ""
+        
+        # Check presets
+        if [[ -d "$PRESET_PATH" ]]; then
+            local preset_count
+            preset_count=$(find "$PRESET_PATH" -name "*.json" 2>/dev/null | wc -l | tr -d ' ')
+            echo -e "  ${GREEN}User Presets:${NC} $preset_count found"
+        else
+            echo -e "  ${BLUE}User Presets:${NC} None"
+        fi
+        
+        echo ""
+        return 0
+    else
+        print_warning "Plugin is NOT INSTALLED"
+        echo ""
+        echo "  Expected location: $plugin_path"
+        echo ""
+        return 1
+    fi
+}
+
+show_info() {
+    echo ""
+    echo -e "${BOLD}Fleen El-Guitar VST3 - Installation Information${NC}"
+    echo ""
+    echo -e "${BOLD}Plugin Details:${NC}"
+    echo "  Name: Fleen El-Guitar"
+    echo "  Type: VST3 Audio Plugin"
+    echo "  Version: Latest from GitHub"
+    echo "  Repository: ${GITHUB_URL}"
+    echo ""
+    echo -e "${BOLD}Installation Paths:${NC}"
+    echo "  VST3 Plugin: $VST3_INSTALL_PATH/${PLUGIN_NAME}.vst3"
+    echo "  User Presets: $PRESET_PATH"
+    echo ""
+    echo -e "${BOLD}System Information:${NC}"
+    echo "  OS: $(sw_vers -productName) $(sw_vers -productVersion)"
+    echo "  Architecture: $(uname -m)"
+    echo ""
+}
+
+# ============================================================================
+# Installation Functions
+# ============================================================================
+
 install_from_release() {
     print_step "Method 1: Downloading pre-built release..."
     
-    # Get latest release info
     local release_info
     release_info=$(curl -s "$RELEASES_URL" 2>/dev/null || echo "")
     
@@ -117,7 +241,6 @@ install_from_release() {
         return 1
     fi
     
-    # Extract download URL for macOS asset
     local download_url
     download_url=$(echo "$release_info" | grep -o '"browser_download_url": "[^"]*\.zip"' | head -1 | cut -d'"' -f4)
     
@@ -128,25 +251,21 @@ install_from_release() {
     
     print_info "Downloading from: $download_url"
     
-    # Create temp directory
     local temp_dir
     temp_dir=$(mktemp -d)
     
-    # Download
     if ! curl -L "$download_url" -o "$temp_dir/plugin.zip" 2>/dev/null; then
         print_warning "Download failed"
         rm -rf "$temp_dir"
         return 1
     fi
     
-    # Extract
     if ! unzip -q "$temp_dir/plugin.zip" -d "$temp_dir" 2>/dev/null; then
         print_warning "Extraction failed"
         rm -rf "$temp_dir"
         return 1
     fi
     
-    # Find VST3 bundle
     local vst3_file
     vst3_file=$(find "$temp_dir" -name "*.vst3" -type d 2>/dev/null | head -1)
     
@@ -156,7 +275,6 @@ install_from_release() {
         return 1
     fi
     
-    # Install
     print_info "Installing to: $VST3_INSTALL_PATH"
     if ! cp -R "$vst3_file" "$VST3_INSTALL_PATH/"; then
         print_warning "Copy failed"
@@ -164,9 +282,9 @@ install_from_release() {
         return 1
     fi
     
-    # Verify
+    rm -rf "$temp_dir"
+    
     if [[ -d "$VST3_INSTALL_PATH/${PLUGIN_NAME}.vst3" ]]; then
-        rm -rf "$temp_dir"
         print_success "Release installation successful!"
         return 0
     fi
@@ -175,11 +293,9 @@ install_from_release() {
     return 1
 }
 
-# Method 2: Download raw VST3 directly
 install_direct_vst3() {
     print_step "Method 2: Downloading VST3 directly..."
     
-    # Try to find direct VST3 download from releases
     local release_info
     release_info=$(curl -s "$RELEASES_URL" 2>/dev/null || echo "")
     
@@ -188,7 +304,6 @@ install_direct_vst3() {
         return 1
     fi
     
-    # Look for .vst3.zip specifically
     local download_url
     download_url=$(echo "$release_info" | grep -o '"browser_download_url": "[^"]*\.vst3\.zip"' | head -1 | cut -d'"' -f4)
     
@@ -224,7 +339,6 @@ install_direct_vst3() {
     return 1
 }
 
-# Method 3: Manual download instructions
 show_manual_instructions() {
     echo ""
     echo -e "${YELLOW}╔════════════════════════════════════════════════════════╗${NC}"
@@ -255,10 +369,6 @@ show_manual_instructions() {
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
 }
-
-# ============================================================================
-# Verification
-# ============================================================================
 
 verify_installation() {
     print_step "Verifying installation..."
@@ -301,13 +411,96 @@ show_success_message() {
 }
 
 # ============================================================================
+# Uninstall Functions
+# ============================================================================
+
+uninstall_plugin() {
+    print_header
+    print_step "Uninstalling Fleen El-Guitar VST3..."
+    echo ""
+    
+    local plugin_path="$VST3_INSTALL_PATH/${PLUGIN_NAME}.vst3"
+    local uninstall_failed=false
+    
+    # Check if plugin is installed
+    if [[ ! -d "$plugin_path" ]]; then
+        print_warning "Plugin is not installed at: $plugin_path"
+        echo ""
+        print_info "Nothing to uninstall."
+        return 0
+    fi
+    
+    # Confirm uninstall
+    echo -e "${YELLOW}⚠ WARNING: This will permanently remove the plugin.${NC}"
+    echo ""
+    read -p "Are you sure you want to uninstall? [y/N]: " -n 1 -r
+    echo ""
+    
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        print_info "Uninstall cancelled."
+        return 0
+    fi
+    
+    # Remove VST3 plugin
+    print_step "Removing VST3 plugin..."
+    if rm -rf "$plugin_path"; then
+        print_success "Removed: $plugin_path"
+    else
+        print_error "Failed to remove: $plugin_path"
+        uninstall_failed=true
+    fi
+    
+    # Ask about presets
+    echo ""
+    if [[ -d "$PRESET_PATH" ]]; then
+        local preset_count
+        preset_count=$(find "$PRESET_PATH" -name "*.json" 2>/dev/null | wc -l | tr -d ' ')
+        
+        if [[ $preset_count -gt 0 ]]; then
+            echo -e "${YELLOW}Found $preset_count user preset(s)${NC}"
+            read -p "Remove user presets as well? [y/N]: " -n 1 -r
+            echo ""
+            
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                print_step "Removing user presets..."
+                if rm -rf "$PRESET_PATH"; then
+                    print_success "Removed: $PRESET_PATH"
+                else
+                    print_error "Failed to remove presets"
+                    uninstall_failed=true
+                fi
+            else
+                print_info "Keeping user presets"
+            fi
+        fi
+    fi
+    
+    # Summary
+    echo ""
+    if [[ "$uninstall_failed" == true ]]; then
+        print_warning "Uninstall completed with errors"
+        return 1
+    else
+        print_success "Uninstall completed successfully!"
+        echo ""
+        echo -e "${BOLD}Note:${NC}"
+        echo "  If you had the plugin open in a DAW, please restart it."
+        echo "  The plugin will no longer appear in your plugin list."
+        echo ""
+        echo -e "${BOLD}Want to reinstall later?${NC}"
+        echo "  Run: curl -fsSL ${GITHUB_URL}/main/install.sh | bash"
+        echo ""
+        return 0
+    fi
+}
+
+# ============================================================================
 # Main Installation Flow
 # ============================================================================
 
-main() {
+do_install() {
     print_header
     
-    # Pre-flight checks
     check_macos
     check_internet
     find_vst3_folder
@@ -315,8 +508,7 @@ main() {
     echo ""
     print_info "Installing to: $VST3_INSTALL_PATH"
     echo ""
-
-    # Try installation methods in order
+    
     if install_from_release; then
         print_success "Installation completed using Method 1 (Release)"
     elif install_direct_vst3; then
@@ -327,7 +519,6 @@ main() {
         exit 1
     fi
     
-    # Verify
     if verify_installation; then
         show_success_message
         exit 0
@@ -338,5 +529,35 @@ main() {
     fi
 }
 
-# Run main function
+# ============================================================================
+# Main Entry Point
+# ============================================================================
+
+main() {
+    check_macos
+    find_vst3_folder
+    
+    case $ACTION in
+        install)
+            do_install
+            ;;
+        uninstall|remove)
+            uninstall_plugin
+            ;;
+        status|check)
+            check_status
+            exit $?
+            ;;
+        info)
+            show_info
+            check_status
+            exit $?
+            ;;
+        *)
+            print_error "Unknown action: $ACTION"
+            show_help
+            ;;
+    esac
+}
+
 main "$@"

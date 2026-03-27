@@ -6,7 +6,6 @@
 #include "components/MeterDisplay.h"
 #include "components/OpenGLVisualizer.h"
 #include "components/PresetSelector.h"
-#include "components/TestKeyboard.h"
 
 namespace fleen
 {
