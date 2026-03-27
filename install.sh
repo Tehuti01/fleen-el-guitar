@@ -48,25 +48,29 @@ PRESET_PATH="$HOME/Library/Application Support/Fleen/El-Guitar/Presets"
 ACTION="install"
 
 # ============================================================================
-# Helper Functions
+# Parse Command Line Arguments FIRST
 # ============================================================================
 
-print_header() {
-    echo ""
-    echo -e "${CYAN}╔════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${CYAN}║${NC}       ${BOLD}Fleen El-Guitar VST3 Installer${NC}                      ${CYAN}║${NC}"
-    echo -e "${CYAN}╚════════════════════════════════════════════════════════╝${NC}"
-    echo ""
-}
-
-print_success() { echo -e "${GREEN}✓${NC} $1"; }
-print_info() { echo -e "${BLUE}ℹ${NC} $1"; }
-print_warning() { echo -e "${YELLOW}⚠${NC} $1"; }
-print_error() { echo -e "${RED}✗${NC} $1"; }
-print_step() { echo -e "${CYAN}▶${NC} $1"; }
-
-show_help() {
-    cat << EOF
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --install)
+            ACTION="install"
+            shift
+            ;;
+        --uninstall|--remove)
+            ACTION="uninstall"
+            shift
+            ;;
+        --status|--check)
+            ACTION="status"
+            shift
+            ;;
+        --info)
+            ACTION="info"
+            shift
+            ;;
+        --help|-h)
+            cat << EOF
 ${BOLD}Fleen El-Guitar VST3 Installer${NC}
 
 ${BOLD}USAGE:${NC}
@@ -101,30 +105,7 @@ ${BOLD}MANUAL COMMANDS:${NC}
     ls -la ~/Library/Audio/Plug-Ins/VST3/${PLUGIN_NAME}.vst3
 
 EOF
-    exit 0
-}
-
-# Parse command line arguments
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        --install)
-            ACTION="install"
-            shift
-            ;;
-        --uninstall|--remove)
-            ACTION="uninstall"
-            shift
-            ;;
-        --status|--check)
-            ACTION="status"
-            shift
-            ;;
-        --info)
-            ACTION="info"
-            shift
-            ;;
-        --help|-h)
-            show_help
+            exit 0
             ;;
         *)
             print_error "Unknown option: $1"
@@ -133,6 +114,24 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+# ============================================================================
+# Helper Functions
+# ============================================================================
+
+print_header() {
+    echo ""
+    echo -e "${CYAN}╔════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}║${NC}       ${BOLD}Fleen El-Guitar VST3 Installer${NC}                      ${CYAN}║${NC}"
+    echo -e "${CYAN}╚════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+}
+
+print_success() { echo -e "${GREEN}✓${NC} $1"; }
+print_info() { echo -e "${BLUE}ℹ${NC} $1"; }
+print_warning() { echo -e "${YELLOW}⚠${NC} $1"; }
+print_error() { echo -e "${RED}✗${NC} $1"; }
+print_step() { echo -e "${CYAN}▶${NC} $1"; }
 
 # ============================================================================
 # Check Functions
