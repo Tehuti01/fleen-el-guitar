@@ -1,0 +1,108 @@
+# ============================================================================
+# Fleen El-Guitar VST3 - Git Ignore
+# ============================================================================
+
+# Build directories
+build/
+cmake-build-*/
+artefacts/
+*_artefacts/
+bin/
+dist/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# JUCE specific
+JuceLibraryCode/
+BinaryData.cpp
+BinaryData.h
+
+# Compiled objects
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+
+# Executables
+*.exe
+*.app
+*.vst3
+*.vst
+*.au
+
+# Test files
+test_output/
+coverage/
+*.gcno
+*.gcda
+
+# Documentation generated
+docs/generated/
+docs/api/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+
+# Logs
+*.log
+logs/
+
+# Package files
+*.zip
+*.tar.gz
+*.dmg
+*.pkg
+*.msi
+
+# Code signing
+*.p12
+*.cer
+*.key
+*.prov
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# User settings
+UserSettings/
+*.user
+
+# Plugin validation
+pluginval_cache/
+*.pluginval
+
+# Presets (user created - keep factory presets)
+# assets/presets/user_*.json
+
+# Audio files
+*.wav
+*.aiff
+*.mp3
+
+# Fonts (if not in source)
+# assets/fonts/*.ttf
+# assets/fonts/*.otf
+
+# Images (if generated)
+# assets/images/generated/

@@ -1,0 +1,16 @@
+{
+  "name": "Lead",
+  "category": "Factory",
+  "isFactory": true,
+  "state": {
+    "gain": 0.5,
+    "drive": 0.7,
+    "bass": 0.5,
+    "mid": 0.8,
+    "treble": 0.6,
+    "presence": 0.7,
+    "reverb": 0.4,
+    "compression": 0.5,
+    "bypass": false
+  }
+}

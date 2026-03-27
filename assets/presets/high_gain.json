@@ -1,0 +1,16 @@
+{
+  "name": "High Gain",
+  "category": "Factory",
+  "isFactory": true,
+  "state": {
+    "gain": 0.4,
+    "drive": 0.8,
+    "bass": 0.7,
+    "mid": 0.6,
+    "treble": 0.4,
+    "presence": 0.5,
+    "reverb": 0.3,
+    "compression": 0.6,
+    "bypass": false
+  }
+}

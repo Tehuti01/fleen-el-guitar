@@ -1,0 +1,16 @@
+{
+  "name": "Crunch",
+  "category": "Factory",
+  "isFactory": true,
+  "state": {
+    "gain": 0.5,
+    "drive": 0.5,
+    "bass": 0.6,
+    "mid": 0.7,
+    "treble": 0.5,
+    "presence": 0.6,
+    "reverb": 0.2,
+    "compression": 0.5,
+    "bypass": false
+  }
+}
